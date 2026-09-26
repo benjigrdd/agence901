@@ -14,7 +14,7 @@ test.describe('actualités : circuit de validation', () => {
 
     await loginAs(page, 'Agent Alpha');
     await page.goto('/demo-alpha/actualites/nouveau');
-    await page.getByLabel('Titre').fill(title);
+    await page.getByRole('textbox', { name: 'Titre', exact: true }).fill(title);
     await page.getByLabel('Résumé').fill('Circulation perturbée rue des Écoles.');
     await expect(page.getByRole('button', { name: 'Publier maintenant' })).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Programmer' })).toHaveCount(0);
@@ -52,7 +52,7 @@ test.describe('actualités : circuit de validation', () => {
   test('programmation affichée en toutes lettres', async ({ page }) => {
     await loginAs(page, 'Administrateur Alpha');
     await page.goto('/demo-alpha/actualites/nouveau');
-    await page.getByLabel('Titre').fill(`Conseil municipal ${Date.now()}`);
+    await page.getByRole('textbox', { name: 'Titre', exact: true }).fill(`Conseil municipal ${Date.now()}`);
     await page.getByLabel('Résumé').fill('Séance publique.');
     await page.getByRole('button', { name: 'Programmer' }).click();
     const year = new Date().getFullYear() + 1;

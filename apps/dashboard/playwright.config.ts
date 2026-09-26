@@ -1,6 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const PORT = Number(process.env.E2E_PORT ?? 3000);
+// Build de production sur un port dedie : pas de compilation a la volee pendant les tests.
+const PORT = Number(process.env.E2E_PORT ?? 3100);
 
 export default defineConfig({
   testDir: './e2e',
@@ -16,10 +17,10 @@ export default defineConfig({
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: {
-    command: 'pnpm dev',
+    command: `pnpm build && pnpm start --port ${PORT}`,
     url: `http://localhost:${PORT}/connexion`,
-    reuseExistingServer: true,
-    timeout: 120_000,
+    reuseExistingServer: !process.env.CI,
+    timeout: 300_000,
     env: { DATA_SOURCE: 'mock' },
   },
 });
