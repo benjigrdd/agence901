@@ -4,8 +4,8 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 
 import type { GeoMultiPolygon, GeoPoint } from '@app/shared';
 import type { ReactNode } from 'react';
-import { useMemo } from 'react';
-import type { MapLayerMouseEvent, MarkerDragEvent } from 'react-map-gl/maplibre';
+import { useMemo, useRef } from 'react';
+import type { MapLayerMouseEvent, MapRef, MarkerDragEvent } from 'react-map-gl/maplibre';
 import Map, { AttributionControl, Layer, Marker, NavigationControl, Source } from 'react-map-gl/maplibre';
 
 export const DEFAULT_MAP_STYLE = 'https://demotiles.maplibre.org/style.json';
@@ -23,6 +23,9 @@ export type MapMarker = {
   content?: ReactNode;
   onClick?: () => void;
 };
+
+/** Au-dela, les marqueurs sont regroupes (clustering) ; la vue Liste reste l'alternative detaillee. */
+export const CLUSTER_THRESHOLD = 50;
 
 export type MapPolygon = { id: string; geom: GeoMultiPolygon; color: string; label: string };
 
@@ -61,7 +64,34 @@ export function MapViewImpl({ center, zoom = 13, ariaLabel, markers = [], polygo
     [polygons],
   );
 
+  const mapRef = useRef<MapRef>(null);
+  const clustered = markers.length > CLUSTER_THRESHOLD;
+  const markerData = useMemo(
+    () => ({
+      type: 'FeatureCollection' as const,
+      features: clustered
+        ? markers.map((m) => ({
+            type: 'Feature' as const,
+            properties: { id: m.id, color: m.color ?? '#1d4ed8' },
+            geometry: { type: 'Point' as const, coordinates: [m.point.lng, m.point.lat] },
+          }))
+        : [],
+    }),
+    [markers, clustered],
+  );
+
   const onClick = (event: MapLayerMouseEvent) => {
+    const feature = event.features?.[0];
+    if (clustered && feature) {
+      const clusterId = feature.properties?.cluster_id;
+      if (typeof clusterId === 'number') {
+        mapRef.current?.easeTo({ center: event.lngLat, zoom: (mapRef.current.getZoom() ?? 13) + 2 });
+        return;
+      }
+      const id = feature.properties?.id;
+      markers.find((m) => m.id === id)?.onClick?.();
+      return;
+    }
     if (onPinChange) onPinChange({ lat: event.lngLat.lat, lng: event.lngLat.lng });
   };
 
@@ -72,7 +102,9 @@ export function MapViewImpl({ center, zoom = 13, ariaLabel, markers = [], polygo
         mapStyle={mapStyleUrl()}
         attributionControl={false}
         locale={LOCALE}
+        ref={mapRef}
         onClick={onClick}
+        interactiveLayerIds={clustered ? ['groupes', 'points'] : undefined}
         style={{ width: '100%', height: '100%' }}
       >
         <NavigationControl position="top-right" showCompass={false} />
@@ -83,13 +115,20 @@ export function MapViewImpl({ center, zoom = 13, ariaLabel, markers = [], polygo
             <Layer id="polygones-contour" type="line" paint={{ 'line-color': ['get', 'color'], 'line-width': 2 }} />
           </Source>
         ) : null}
-        {markers.map((m) => (
+        {clustered ? (
+          <Source id="marqueurs" type="geojson" data={markerData} cluster clusterRadius={40}>
+            <Layer id="groupes" type="circle" filter={['has', 'point_count']} paint={{ 'circle-color': '#1e3a8a', 'circle-radius': ['step', ['get', 'point_count'], 16, 20, 22, 100, 28], 'circle-stroke-color': '#ffffff', 'circle-stroke-width': 2 }} />
+            <Layer id="points" type="circle" filter={['!', ['has', 'point_count']]} paint={{ 'circle-color': ['get', 'color'], 'circle-radius': 7, 'circle-stroke-color': '#ffffff', 'circle-stroke-width': 2 }} />
+          </Source>
+        ) : null}
+        {(clustered ? [] : markers).map((m) => (
           <Marker key={m.id} latitude={m.point.lat} longitude={m.point.lng} anchor="bottom">
             <button
               type="button"
               onClick={m.onClick}
               aria-label={m.label}
-              className="flex items-center gap-1 rounded-full border-2 border-white px-2 py-0.5 text-xs font-semibold text-white shadow"
+              data-map-marker
+              className="flex min-h-6 min-w-6 items-center justify-center gap-1 rounded-full border-2 border-white px-2 py-0.5 text-xs font-semibold text-white shadow"
               style={{ backgroundColor: m.color ?? '#1d4ed8' }}
             >
               {m.content ?? '●'}

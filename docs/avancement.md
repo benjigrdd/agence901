@@ -5,8 +5,8 @@
 | 01 | Monorepo et conventions | Terminé (app mobile : 2 fichiers en attente, voir ci-dessous) |
 | 02 | Contrats de données et couche mock | Terminé |
 | 03 | Coque du dashboard | Terminé |
-| 04 | Actualités, Agenda, Médiathèque | Terminé (1 test E2E instable à vérifier) |
-| 05 | Signalements, Carte, Quartiers | À faire |
+| 04 | Actualités, Agenda, Médiathèque | Terminé |
+| 05 | Signalements, Carte, Quartiers | Terminé |
 | 06 | Accueil, Notifications, Environnement, Démarches, Paramètres, Audit | À faire |
 | 07–19 | Voir `00-plan-et-mode-emploi.md` | À faire |
 
@@ -71,3 +71,33 @@
   `export { default } from '@app/config/eslint/next';` (ajoute toutes les règles jsx-a11y).
   Modification bloquée par le hook `config-protection` du plugin ecc.
 - `.npmrc` non créé (bloqué) : `nodeLinker: hoisted` est dans `pnpm-workspace.yaml`, équivalent.
+
+## Lot 04 — Actualités, Agenda, Médiathèque
+
+- Éditeur Tiptap restreint au `RichTextDoc`, circuit de validation (soumettre, refuser avec motif,
+  publier, programmer), aperçu mobile aux couleurs de la commune, calendrier mensuel accessible,
+  récurrences (hebdomadaire, toutes les 2 semaines, mensuelle), médiathèque avec texte alternatif obligatoire.
+- Les tests E2E tournent sur un build de production (`next build && next start`, port 3100) :
+  plus d'instabilité liée à la compilation à la volée.
+
+## Lot 05 — Signalements, Carte, Quartiers
+
+- `/signalements` : indicateurs (nouveaux, en cours, en retard selon le `slaDays` de la catégorie,
+  délai moyen 30 j), filtres (statut, catégorie, service, priorité, période, quartier, en retard),
+  vues Liste et Carte, export CSV `/signalements/export` (colonnes fixées par `buildReportsCsv`,
+  aucune donnée personnelle, formules neutralisées).
+- `/signalements/{id}` : galerie avec visionneuse clavier, mini-carte et itinéraire, habitant
+  pseudonymisé, chronologie « Visible par l'habitant » / « Note interne », changement de statut
+  (motif obligatoire et public pour un rejet), assignation, priorité, note interne, doublon
+  (signalements à moins de 100 m via `reports.nearby`, puis lecture seule).
+- `/carte` : lieux en liste ou carte, formulaire avec autocomplétion d'adresse (API Adresse de la
+  Géoplateforme, restreinte au code INSEE), épingle déplaçable avec géocodage inverse, horaires
+  `opening_hours` (`@app/shared/opening-hours.ts`), accessibilité, photo, source et « détacher de l'import ».
+  `/carte/categories` : masquer les catégories par défaut, ajouter des catégories (contraste vérifié).
+- `/quartiers` : dessin terra-draw (créer, déplacer les sommets, supprimer), import GeoJSON validé
+  par zod, avertissement de chevauchement (`@turf/intersect`), statistiques par quartier.
+- Carte commune : clustering au-delà de 50 marqueurs, marqueurs 24 px avec icône et texte.
+- Fixtures : un signalement « nouveau » proche d'un autre de même catégorie, pour le parcours doublon.
+- Tests : Vitest (`opening-hours`, `report-export`), Playwright (traitement complet, rejet, note
+  interne, doublon, export CSV, création d'un lieu par adresse, import d'un quartier visible dans les
+  actualités, agent sans accès à Carte et Quartiers, axe sur liste, carte et détail).

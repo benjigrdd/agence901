@@ -691,10 +691,12 @@ function buildTenant(data: MockData, def: TenantDef, now: Date): void {
   ];
   const REPORT_AGE = [0, 1, 2, 4, 9, 15, 3, 6, 12, 20, 5, 8, 11, 16, 25, 33, 10, 14, 22, 30, 45, 7, 18, 2, 4];
   const DUPLICATE_OF: Partial<Record<number, number>> = { 23: 10, 24: 12 };
+  /** Doublon probable non encore traite : a proximite d'un signalement ouvert de meme categorie. */
+  const PROBABLE_DUPLICATE_OF: Partial<Record<number, number>> = { 5: 2 };
   const CITIZEN_REPORTS = new Set([0, 10, 16]);
 
   const drafts = REPORT_STATUS.map((status, i) => {
-    const originalIndex = DUPLICATE_OF[i];
+    const originalIndex = DUPLICATE_OF[i] ?? PROBABLE_DUPLICATE_OF[i];
     const categoryIndex = originalIndex !== undefined ? originalIndex % REPORT_CATEGORY_DEFS.length : i % REPORT_CATEGORY_DEFS.length;
     const created = ago(REPORT_AGE[i] ?? 1, 1 + (i % 5));
     return { i, status, categoryIndex, created, originalIndex };
@@ -715,9 +717,10 @@ function buildTenant(data: MockData, def: TenantDef, now: Date): void {
     const catDef = REPORT_CATEGORY_DEFS[d.categoryIndex] ?? REPORT_CATEGORY_DEFS[0];
     const category = reportCategories[d.categoryIndex] ?? reportCategories[0];
     if (!category) continue;
-    const original = d.originalIndex !== undefined ? reports[d.originalIndex] : undefined;
-    const point = original
-      ? { lat: original.point.lat + 0.0003, lng: original.point.lng + 0.0002 }
+    const near = d.originalIndex !== undefined ? reports[d.originalIndex] : undefined;
+    const original = d.status === 'duplicate' ? near : undefined;
+    const point = near
+      ? { lat: near.point.lat + 0.0003, lng: near.point.lng + 0.0002 }
       : nearCenter(0.014);
     const photoCount = d.i % 3;
     const priority: ReportPriority = d.i % 7 === 0 ? 'high' : d.i % 3 === 0 ? 'low' : 'normal';

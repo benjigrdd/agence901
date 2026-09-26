@@ -68,3 +68,17 @@ Format court : contexte, décision, conséquences. On ajoute une entrée à chaq
     natif exige la version exacte) ; une seule version évite les doublons avec `hoisted`.
   - shadcn `field` à la place de `form` (retiré du registre du style `radix-nova`).
 - **Conséquences** : à réévaluer quand l'écosystème supportera ESLint 10 et TypeScript 7.
+
+## ADR-008 — Tests E2E sur build de production (lot 04)
+
+Playwright démarre `next build && next start` sur le port 3100 au lieu de `next dev` : la compilation
+à la volée rendait les parcours longs instables (délais de 30 s). Le serveur existant est réutilisé
+hors CI.
+
+## ADR-009 — Taille des cibles sur les cartes (lot 05)
+
+Les marqueurs de carte font 24 px minimum, mais des marqueurs proches se chevauchent. Nous appliquons
+l'exception « essentielle » de WCAG 2.5.8 (la position est l'information) : les tests axe ignorent la
+règle `target-size` pour les seuls marqueurs (`data-map-marker`). Chaque carte garde une vue Liste
+équivalente, utilisable au clavier.
+

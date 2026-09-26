@@ -16,6 +16,15 @@ export async function expectNoSeriousA11yViolations(page: Page): Promise<void> {
     // Outil de developpement, absent en production.
     .exclude('[data-dev-tool]')
     .analyze();
-  const serious = results.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
+  const serious = results.violations
+    .map((v) =>
+      v.id === 'target-size'
+        ? // WCAG 2.5.8, exception « essentielle » : la position d'un marqueur sur la carte est l'information ;
+          // les marqueurs proches se chevauchent. La vue Liste equivalente reste l'alternative.
+          { ...v, nodes: v.nodes.filter((n) => !n.html.includes('data-map-marker')) }
+        : v,
+    )
+    .filter((v) => v.nodes.length > 0)
+    .filter((v) => v.impact === 'serious' || v.impact === 'critical');
   expect(serious.map((v) => `${v.id}: ${v.help} (${v.nodes.length})`)).toEqual([]);
 }
