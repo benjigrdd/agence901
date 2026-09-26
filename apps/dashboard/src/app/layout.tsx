@@ -34,7 +34,7 @@ export default async function RootLayout({ children }: LayoutProps<'/'>) {
           {children}
           {mock ? <PersonaSwitcher personas={staffPersonas} current={current} /> : null}
         </TooltipProvider>
-        <Toaster position="top-center" richColors closeButton />
+        <Toaster theme="light" position="top-center" richColors closeButton />
       </body>
     </html>
   );

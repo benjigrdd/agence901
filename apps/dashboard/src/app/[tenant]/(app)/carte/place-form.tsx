@@ -28,7 +28,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 
 import { removePlaceAction, savePlaceAction } from './actions';
-import { OpeningHoursEditor } from './opening-hours-editor';
+import { OpeningHoursEditor } from '@/components/opening-hours-editor';
 
 type PlaceFormProps = {
   slug: string;

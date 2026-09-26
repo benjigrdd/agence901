@@ -1,5 +1,11 @@
 import type { Notification, NotificationTarget } from '@app/shared';
-import { NotificationInputSchema, NotificationSchema, NotificationTargetSchema } from '@app/shared';
+import {
+  NOTIFICATION_JUSTIFICATION_REQUIRED_MESSAGE,
+  NotificationInputSchema,
+  NotificationSchema,
+  NotificationTargetSchema,
+  requiresNotificationJustification,
+} from '@app/shared';
 
 import type { DataContext } from '../../context';
 import { ValidationError } from '../../errors';
@@ -54,6 +60,11 @@ export function createNotificationsRepository(rt: MockRuntime): NotificationsRep
       const session = requirePermission(store, ctx, 'notifications', 'publish');
       const data = parseInput(NotificationInputSchema, input);
       checkTargetIds(ctx, data.target);
+      if (!data.justification?.trim() && requiresNotificationJustification(store.notifications.forTenant(ctx.tenantId), data, rt.now())) {
+        throw new ValidationError(NOTIFICATION_JUSTIFICATION_REQUIRED_MESSAGE, [
+          { path: 'justification', message: NOTIFICATION_JUSTIFICATION_REQUIRED_MESSAGE },
+        ]);
+      }
       if (data.linkedEntity) {
         const linked =
           data.linkedEntity.type === 'post'

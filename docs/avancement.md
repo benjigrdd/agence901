@@ -7,7 +7,7 @@
 | 03 | Coque du dashboard | Terminé |
 | 04 | Actualités, Agenda, Médiathèque | Terminé |
 | 05 | Signalements, Carte, Quartiers | Terminé |
-| 06 | Accueil, Notifications, Environnement, Démarches, Paramètres, Audit | À faire |
+| 06 | Accueil, Notifications, Environnement, Démarches, Paramètres, Audit | Terminé |
 | 07–19 | Voir `00-plan-et-mode-emploi.md` | À faire |
 
 ## Lot 01 — Monorepo et conventions
@@ -101,3 +101,30 @@
 - Tests : Vitest (`opening-hours`, `report-export`), Playwright (traitement complet, rejet, note
   interne, doublon, export CSV, création d'un lieu par adresse, import d'un quartier visible dans les
   actualités, agent sans accès à Carte et Quartiers, axe sur liste, carte et détail).
+
+## Lot 06 — Accueil, Notifications, Environnement, Démarches, Paramètres, Audit
+
+Écrans (tous les écrans commune du V1 sont navigables sur le mock) :
+
+| Route | Contenu |
+|---|---|
+| `/{commune}` | indicateurs (signalements ouverts, en retard, délai moyen, contenus à valider, programmés à 7 j, installations, actifs), histogramme 12 semaines + résumé + tableau « Voir les données », « À faire », « Dernières actions » (admin) ; chaque bloc selon les droits |
+| `/{commune}/notifications` | historique ; composeur (compteurs 50/150, cible commune / quartiers / thèmes, contenu lié, immédiat ou programmé, urgente), estimation d'audience en direct, aperçus iOS et Android, confirmation « Vous allez notifier environ N habitants », justification au-delà de 3 non urgentes par jour |
+| `/{commune}/environnement` | onglets Zones (dessin terra-draw, import GeoJSON), Calendrier (récurrence hebdomadaire ou toutes les 2 semaines, exceptions annulées ou reportées, note, 8 prochaines collectes par zone), Consignes de tri (recherche, ajout, import CSV « Bientôt »), Déchèteries (lieux de la catégorie, horaires lisibles) |
+| `/{commune}/demarches` | démarches groupées par catégorie, ordre par glisser-déposer au clavier (dnd-kit, annonces en français) et boutons Monter / Descendre, catalogue service-public.gouv.fr en un clic (URLs vérifiées), bloc « Mairie : horaires et contact » |
+| `/{commune}/parametres/membres` | liste, invitation avec matrice de droits (radios par module), modification, désactivation / réactivation, garde du dernier admin |
+| `/{commune}/parametres/services` | services et catégories de signalement (icône, service par défaut, délai cible) |
+| `/{commune}/parametres/thematiques` | thèmes d'intérêt, réordonnables |
+| `/{commune}/parametres/commune` | informations et marque en lecture seule, liens légaux, tuiles de l'accueil de l'app (activables, ordonnables) avec aperçu |
+| `/{commune}/audit` | filtres (acteur, élément, action, période), détail avant / après, export CSV (noms des champs seulement), « Conservation : 12 mois » |
+
+- `@app/shared` : `notification-rules.ts` (quota quotidien Europe/Paris, testé), `procedures-catalog.ts`,
+  `describeOpeningHoursFr`. Le dépôt `notifications` applique la règle (justification exigée).
+- Composants : `SortableList` (glisser-déposer accessible + Monter / Descendre), `OpeningHoursEditor` partagé,
+  `lib/geojson.ts` (import Polygon / MultiPolygon).
+- Mock : connexion « en tant que » un membre invité pendant la démo (cookie `membre:<id>`), pour vérifier ses droits.
+- Accessibilité : toasts assombris (contraste AA), histogramme avec motif hachuré et tableau équivalent.
+- Tests : Vitest (règle anti-lassitude, justification côté dépôt, dernier admin), Playwright 9 parcours
+  (accueil selon les droits, notification ciblée, justification, démarche du catalogue et réordonnancement
+  au clavier, collectes, invitation puis connexion, dernier admin, 403 agent, diff d'audit) + axe sur toutes les pages.
+

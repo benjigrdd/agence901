@@ -34,6 +34,11 @@ const Toaster = ({ ...props }: ToasterProps) => {
           "--normal-text": "var(--popover-foreground)",
           "--normal-border": "var(--border)",
           "--border-radius": "var(--radius)",
+          // Couleurs « richColors » assombries : contraste AA (4,5:1) du texte sur le fond clair.
+          "--success-text": "#166534",
+          "--error-text": "#991b1b",
+          "--warning-text": "#854d0e",
+          "--info-text": "#1e40af",
         } as React.CSSProperties
       }
       toastOptions={{

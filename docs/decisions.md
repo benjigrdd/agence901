@@ -82,3 +82,9 @@ l'exception « essentielle » de WCAG 2.5.8 (la position est l'information) : le
 règle `target-size` pour les seuls marqueurs (`data-map-marker`). Chaque carte garde une vue Liste
 équivalente, utilisable au clavier.
 
+## ADR-010 — Règle anti-lassitude des notifications (lot 06)
+
+Au-delà de 3 notifications non urgentes le même jour (Europe/Paris, date d'envoi ou de programmation),
+une justification est obligatoire. La règle vit dans `@app/shared/notification-rules.ts`, est appliquée
+par le dépôt (mock, puis Supabase au lot 14) et affichée par le composeur. Les notifications urgentes y échappent.
+

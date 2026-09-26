@@ -72,6 +72,19 @@ describe('mock : règles spécifiques', () => {
     await expect(repos.members.updatePermissions(admin, membership?.id ?? '', { role: 'agent', permissions: {} })).rejects.toBeInstanceOf(ConflictError);
   });
 
+  it('exige une justification pour la 4e notification non urgente de la journee', async () => {
+    const { repos } = createMockEnvironment({ fresh: true });
+    const admin = ctxOf('admin-alpha', 'alpha');
+    const input = { title: 'Info', body: 'Message', target: { type: 'all' as const, ids: [] }, linkedEntity: null, scheduledAt: null, urgent: false, justification: null };
+    const today = (await repos.notifications.list(admin, { pageSize: 1000 })).items.filter(
+      (n) => !n.urgent && (n.scheduledAt ?? n.createdAt).slice(0, 10) === new Date().toISOString().slice(0, 10),
+    ).length;
+    for (let i = today; i < 3; i++) await repos.notifications.create(admin, input);
+    await expect(repos.notifications.create(admin, input)).rejects.toThrow('justification est obligatoire');
+    await expect(repos.notifications.create(admin, { ...input, urgent: true })).resolves.toBeDefined();
+    await expect(repos.notifications.create(admin, { ...input, justification: 'Coupure d’eau imprévue' })).resolves.toBeDefined();
+  });
+
   it('reconstruit les sessions des personas depuis les appartenances', () => {
     const env = createMockEnvironment({ fresh: true });
     expect(env.sessionForUser(USER_IDS.agentAlpha, 'aal2')).toEqual(PERSONA_SESSIONS['agent-alpha']);

@@ -46,3 +46,12 @@ describe('opening_hours', () => {
     expect(openingHoursErrors(h)).toEqual({ Mo: 'L’heure de fin doit suivre l’heure de début', Tu: 'Heure invalide (HH:MM)' });
   });
 });
+
+describe('describeOpeningHoursFr', () => {
+  it('decrit chaque jour en francais', async () => {
+    const { describeOpeningHoursFr } = await import('./opening-hours');
+    expect(describeOpeningHoursFr('Mo 09:00-12:00')[0]).toBe('Lundi : 9 h 00 – 12 h 00');
+    expect(describeOpeningHoursFr('Mo 09:00-12:00')[6]).toBe('Dimanche : fermé');
+    expect(describeOpeningHoursFr('PH off')).toEqual(['PH off']);
+  });
+});

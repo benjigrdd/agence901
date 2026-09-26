@@ -111,3 +111,16 @@ export function parseOpeningHours(value: string | null): WeeklyHours | null {
   }
   return result;
 }
+
+/** Lignes lisibles (« Lundi : 9 h 00 – 12 h 00 ») ; l'expression brute si elle n'est pas relisible. */
+export function describeOpeningHoursFr(value: string | null): string[] {
+  if (!value?.trim()) return ['Horaires non renseignés'];
+  const hours = parseOpeningHours(value);
+  if (!hours) return [value];
+  if (hours.alwaysOpen) return ['Ouvert 24 h/24, 7 j/7'];
+  const time = (t: string) => t.replace(/^0(\d)/, '$1').replace(':', ' h ');
+  return WEEKDAY_KEYS.map((d) => {
+    const ranges = hours.days[d];
+    return `${WEEKDAY_LABELS_FR[d]} : ${ranges.length ? ranges.map((r) => `${time(r.from)} – ${time(r.to)}`).join(', ') : 'fermé'}`;
+  });
+}

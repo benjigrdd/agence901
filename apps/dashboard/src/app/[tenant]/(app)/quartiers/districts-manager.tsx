@@ -1,13 +1,11 @@
 'use client';
 
 import type { GeoMultiPolygon, GeoPoint } from '@app/shared';
-import { GeoPolygonalSchema, toMultiPolygon } from '@app/shared';
 import { Pencil, Plus, TriangleAlert } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import type { ChangeEvent, FormEvent } from 'react';
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
-import { z } from 'zod';
 
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { DrawMap } from '@/components/map/draw-map';
@@ -15,38 +13,13 @@ import { MapView } from '@/components/map/map-view';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { parsePolygonGeoJson } from '@/lib/geojson';
 
 import { removeDistrictAction, saveDistrictAction } from './actions';
 
 type DistrictView = { id: string; name: string; color: string; geom: GeoMultiPolygon; reports: number; subscribers: number };
 
 type Props = { slug: string; center: GeoPoint; canEdit: boolean; districts: DistrictView[] };
-
-const GeoJsonInputSchema = z.union([
-  GeoPolygonalSchema,
-  z.object({ type: z.literal('Feature'), geometry: GeoPolygonalSchema }),
-  z.object({ type: z.literal('FeatureCollection'), features: z.array(z.object({ geometry: GeoPolygonalSchema })).min(1) }),
-]);
-
-/** Lit un GeoJSON (geometrie, Feature ou FeatureCollection) Polygon/MultiPolygon en WGS84. */
-export function parseDistrictGeoJson(text: string): { ok: true; geom: GeoMultiPolygon } | { ok: false; message: string } {
-  let json: unknown;
-  try {
-    json = JSON.parse(text);
-  } catch {
-    return { ok: false, message: 'Fichier illisible : JSON invalide.' };
-  }
-  const parsed = GeoJsonInputSchema.safeParse(json);
-  if (!parsed.success) {
-    return { ok: false, message: 'GeoJSON non reconnu : un Polygon ou MultiPolygon en WGS84 (longitude, latitude) est attendu.' };
-  }
-  const data = parsed.data;
-  if (data.type === 'Feature') return { ok: true, geom: toMultiPolygon(data.geometry) };
-  if (data.type === 'FeatureCollection') {
-    return { ok: true, geom: { type: 'MultiPolygon', coordinates: data.features.flatMap((f) => toMultiPolygon(f.geometry).coordinates) } };
-  }
-  return { ok: true, geom: toMultiPolygon(data) };
-}
 
 type Draft = { id: string | null; name: string; color: string; geom: GeoMultiPolygon | null; version: number };
 
@@ -67,7 +40,7 @@ export function DistrictsManager({ slug, center, canEdit, districts }: Props) {
     const file = e.target.files?.[0];
     e.target.value = '';
     if (!file || !draft) return;
-    const result = parseDistrictGeoJson(await file.text());
+    const result = parsePolygonGeoJson(await file.text());
     if (!result.ok) {
       setErrors({ geom: result.message });
       return;

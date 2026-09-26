@@ -2,11 +2,12 @@ import { PERSONA_KEYS, PERSONAS } from '@app/data';
 import { ShieldAlert } from 'lucide-react';
 import type { Metadata } from 'next';
 
-import { setPersona } from '@/app/actions/session';
+import { setMemberPersona, setPersona } from '@/app/actions/session';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { getProductName } from '@/lib/product-name';
 import { isMockDataSource } from '@/server/repos';
+import { invitedMembers } from '@/server/session';
 
 export const metadata: Metadata = { title: 'Connexion' };
 
@@ -57,6 +58,26 @@ export default async function LoginPage({ searchParams }: PageProps<'/connexion'
               </li>
             ))}
           </ul>
+          {invitedMembers().length ? (
+            <section aria-labelledby="membres-invites" className="mt-8 space-y-3">
+              <h2 id="membres-invites" className="text-lg font-semibold">
+                Membres invités pendant la démonstration
+              </h2>
+              <ul className="grid gap-3 sm:grid-cols-2">
+                {invitedMembers().map((m) => (
+                  <li key={m.userId}>
+                    <form action={setMemberPersona} className="flex items-center justify-between gap-2 rounded-lg border p-3">
+                      <span className="font-medium">{m.displayName}</span>
+                      <input type="hidden" name="userId" value={m.userId} />
+                      <Button type="submit" variant="outline">
+                        Se connecter en tant que {m.displayName}
+                      </Button>
+                    </form>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
         </>
       ) : (
         <p className="text-muted-foreground mt-4">La connexion sécurisée sera disponible prochainement (lot 13).</p>

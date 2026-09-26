@@ -1,12 +1,27 @@
+import { can } from '@app/shared';
 import type { Metadata } from 'next';
 
-import { ModulePlaceholder } from '@/components/shell/module-placeholder';
+import { PageHeader } from '@/components/page-header';
 import { requirePermission } from '@/server/guards';
+import { getRepos } from '@/server/repos';
 
-export const metadata: Metadata = { title: "Thématiques" };
+import { TopicsManager } from './topics-manager';
 
-export default async function Page({ params }: PageProps<'/[tenant]/parametres/thematiques'>) {
-  const { tenant } = await params;
-  await requirePermission(tenant, 'settings', 'read');
-  return <ModulePlaceholder title="Thématiques" description="Thèmes d’intérêt proposés aux habitants." lot="06" />;
+export const metadata: Metadata = { title: 'Thématiques' };
+
+export default async function TopicsPage({ params }: PageProps<'/[tenant]/parametres/thematiques'>) {
+  const { tenant: slug } = await params;
+  const { session, tenant, ctx } = await requirePermission(slug, 'settings', 'read');
+  const topics = await getRepos().topics.list(ctx);
+  return (
+    <>
+      <PageHeader title="Thématiques" description="Les centres d’intérêt proposés aux habitants pour recevoir des notifications ciblées." />
+      <TopicsManager
+        key={topics.map((t) => `${t.id}:${t.label}`).sort().join('|')}
+        slug={slug}
+        canEdit={can(session, tenant.id, 'settings', 'edit')}
+        topics={topics.sort((a, b) => a.order - b.order).map(({ id, label, order }) => ({ id, label, order }))}
+      />
+    </>
+  );
 }
