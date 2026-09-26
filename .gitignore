@@ -1,0 +1,36 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# builds
+.next/
+out/
+dist/
+build/
+
+# caches
+.turbo/
+*.tsbuildinfo
+coverage/
+
+# expo
+.expo/
+.expo-shared/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+
+# env
+.env
+.env.*
+!.env.example
+
+# os / editors
+.DS_Store
+*.log
+.idea/
+.vscode/*
+!.vscode/extensions.json

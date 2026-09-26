@@ -1,0 +1,24 @@
+{
+  "name": "mairie",
+  "private": true,
+  "packageManager": "pnpm@12.6.0",
+  "engines": {
+    "node": ">=24.21.0"
+  },
+  "scripts": {
+    "dev": "turbo run dev",
+    "dev:dashboard": "turbo run dev --filter=dashboard",
+    "dev:mobile": "turbo run dev --filter=mobile",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "format": "prettier --write ."
+  },
+  "devDependencies": {
+    "@app/config": "workspace:*",
+    "prettier": "3.9.9",
+    "turbo": "2.11.4",
+    "typescript": "5.9.3"
+  }
+}
