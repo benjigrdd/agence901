@@ -45,6 +45,8 @@ export default async function TenantLayout({ children, params }: LayoutProps<'/[
     })),
   }));
   const isEditorView = session.isPlatformAdmin && !session.memberships.some((m) => m.tenantId === tenant.id);
+  // Chaque acces de l'editeur a l'espace d'une commune est inscrit dans l'audit de cette commune.
+  if (isEditorView) await repos.audit.recordPlatformAccess(ctx);
 
   return (
     <SidebarProvider>

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 import { TENANT_PLANS, TENANT_STATUSES, TENANT_TYPES } from '../enums';
-import { enumSchema, idSchema, isoDateTimeSchema, requiredText, slugSchema } from './common';
+import { enumSchema, idSchema, isoDateSchema, isoDateTimeSchema, optionalText, requiredText, slugSchema } from './common';
 import { GeoPointSchema } from './geo';
 
 export const TenantSchema = z.object({
@@ -16,6 +16,9 @@ export const TenantSchema = z.object({
   plan: enumSchema(TENANT_PLANS),
   timezone: z.string().min(1),
   center: GeoPointSchema,
+  renewalDate: isoDateSchema.nullable(),
+  /** Notes de l'editeur, jamais visibles par la commune. */
+  internalNotes: optionalText(2000),
   createdAt: isoDateTimeSchema,
   updatedAt: isoDateTimeSchema,
 });

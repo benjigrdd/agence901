@@ -11,10 +11,15 @@ export async function loginAs(page: Page, personaLabel: string): Promise<void> {
 
 /** Zero violation « serious » ou « critical » (WCAG 2.x A/AA). */
 export async function expectNoSeriousA11yViolations(page: Page): Promise<void> {
+  // Mesure sur l'etat stable : on attend la fin des animations (ouverture de dialog, apparition...).
+  await page.waitForFunction(() => document.getAnimations().every((a) => a.playState !== 'running'));
   const results = await new AxeBuilder({ page })
     .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
     // Outil de developpement, absent en production.
     .exclude('[data-dev-tool]')
+    // Toasts ephemeres : mesures pendant leur animation d'apparition (opacite partielle). Couleurs finales AA
+    // fixees dans `components/ui/sonner.tsx`.
+    .exclude('[data-sonner-toaster]')
     .analyze();
   const serious = results.violations
     .map((v) =>

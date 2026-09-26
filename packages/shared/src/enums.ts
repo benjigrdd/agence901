@@ -78,7 +78,7 @@ export type TenantType = (typeof TENANT_TYPES)[number];
 export const TENANT_STATUSES = ['onboarding', 'active', 'suspended'] as const;
 export type TenantStatus = (typeof TENANT_STATUSES)[number];
 
-export const TENANT_PLANS = ['essential', 'standard', 'premium'] as const;
+export const TENANT_PLANS = ['pilot', 'standard'] as const;
 export type TenantPlan = (typeof TENANT_PLANS)[number];
 
 export const WASTE_TYPES = ['household', 'recycling', 'glass', 'biowaste', 'bulky', 'green'] as const;
@@ -149,5 +149,11 @@ export const AUDIT_ACTIONS = [
   'upload',
   'reorder',
   'send',
+  'platform_access',
 ] as const;
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];
+
+/** Statut de publication de l'app d'une commune sur un store. */
+export const STORE_PUBLICATION_STATUSES = ['not_started', 'accounts_pending', 'in_review', 'published', 'rejected'] as const;
+export type StorePublicationStatus = (typeof STORE_PUBLICATION_STATUSES)[number];
+

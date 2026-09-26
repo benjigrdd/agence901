@@ -10,9 +10,14 @@ export type TenantRow = {
   id: string;
   slug: string;
   name: string;
-  inseeCode: string;
+  type: string;
   population: number;
   status: string;
+  plan: string;
+  modules: number;
+  publication: string;
+  lastActivity: string;
+  lastActivityLabel: string;
 };
 
 const columns: ColumnDef<TenantRow>[] = [
@@ -25,9 +30,13 @@ const columns: ColumnDef<TenantRow>[] = [
       </Link>
     ),
   },
-  { accessorKey: 'inseeCode', header: 'Code INSEE' },
+  { accessorKey: 'type', header: 'Type' },
   { accessorKey: 'population', header: 'Habitants', cell: ({ row }) => formatNumberFr(row.original.population) },
   { accessorKey: 'status', header: 'Statut' },
+  { accessorKey: 'plan', header: 'Offre' },
+  { accessorKey: 'modules', header: 'Modules actifs' },
+  { accessorKey: 'publication', header: 'Publication', enableSorting: false },
+  { accessorKey: 'lastActivity', header: 'Dernière activité', cell: ({ row }) => row.original.lastActivityLabel },
   {
     id: 'open',
     header: 'Espace commune',
@@ -41,13 +50,5 @@ const columns: ColumnDef<TenantRow>[] = [
 ];
 
 export function TenantsTable({ rows }: { rows: TenantRow[] }) {
-  return (
-    <DataTable
-      columns={columns}
-      data={rows}
-      caption="Liste des communes clientes"
-      searchLabel="Rechercher une commune"
-      getRowId={(row) => row.id}
-    />
-  );
+  return <DataTable columns={columns} data={rows} caption="Communes clientes" searchLabel="Rechercher une commune" getRowId={(r) => r.id} />;
 }

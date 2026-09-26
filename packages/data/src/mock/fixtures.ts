@@ -21,6 +21,7 @@ import type {
   Topic,
 } from '@app/shared';
 import {
+  ONBOARDING_STEP_DEFS,
   AuditEntrySchema,
   CitizenProfileSchema,
   ContentReviewSchema,
@@ -110,12 +111,12 @@ const TENANT_DEFS: TenantDef[] = [
     domain: 'demo-alpha.test',
     phone: '02 47 00 00 00',
     colors: {
-      primary: '#1D4E89',
-      onPrimary: '#FFFFFF',
-      secondary: '#F2A900',
-      background: '#F7F8FA',
-      surface: '#FFFFFF',
-      text: '#1B1F24',
+      primary: '#1d4e89',
+      onPrimary: '#ffffff',
+      secondary: '#f2a900',
+      background: '#f7f8fa',
+      surface: '#ffffff',
+      text: '#1b1f24',
     },
     districts: ['Centre-bourg', 'Les Prés', 'Bel-Air'],
     adminId: USER_IDS.adminAlpha,
@@ -142,12 +143,12 @@ const TENANT_DEFS: TenantDef[] = [
     domain: 'demo-beta.test',
     phone: '04 76 00 00 00',
     colors: {
-      primary: '#1F6B45',
-      onPrimary: '#FFFFFF',
-      secondary: '#C2410C',
-      background: '#F6F8F5',
-      surface: '#FFFFFF',
-      text: '#17211B',
+      primary: '#1f6b45',
+      onPrimary: '#ffffff',
+      secondary: '#c2410c',
+      background: '#f6f8f5',
+      surface: '#ffffff',
+      text: '#17211b',
     },
     districts: ['Le Village', 'Les Côtes', 'La Plaine'],
     adminId: USER_IDS.adminBeta,
@@ -299,9 +300,11 @@ function buildTenant(data: MockData, def: TenantDef, now: Date): void {
     inseeCode: def.inseeCode,
     population: def.population,
     status: 'active',
-    plan: 'standard',
+    plan: def.slug === 'demo-alpha' ? 'standard' : 'pilot',
     timezone: 'Europe/Paris',
     center: def.center,
+    renewalDate: iso(ahead(200, 0)).slice(0, 10),
+    internalNotes: null,
     ...stamps(ago(200), ago(10)),
   });
   data.branding.push({
@@ -338,12 +341,17 @@ function buildTenant(data: MockData, def: TenantDef, now: Date): void {
     androidPackage: bundle,
     easProjectId: null,
     appStoreId: null,
-    onboardingChecklist: [
-      { key: 'apple-account', label: 'Compte Apple Developer de la mairie', done: true },
-      { key: 'google-account', label: 'Compte Google Play de la mairie', done: true },
-      { key: 'store-listing', label: 'Fiches store rédigées', done: false },
-      { key: 'first-build', label: 'Premier build de production', done: false },
-    ],
+    urlScheme: bundle.split('.').pop() ?? 'demo',
+    playStoreUrl: null,
+    iosStatus: def.slug === 'demo-alpha' ? 'in_review' : 'accounts_pending',
+    androidStatus: def.slug === 'demo-alpha' ? 'published' : 'not_started',
+    iosRejectionReason: null,
+    androidRejectionReason: null,
+    onboardingChecklist: ONBOARDING_STEP_DEFS.map((step, i) => ({
+      ...step,
+      done: i < (def.slug === 'demo-alpha' ? 6 : 2),
+      doneAt: i < (def.slug === 'demo-alpha' ? 6 : 2) ? iso(ago(150 - i * 10)) : null,
+    })),
   });
 
   // Membres -----------------------------------------------------------------------

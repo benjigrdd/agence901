@@ -1,4 +1,5 @@
 import type {
+  StorePublicationStatus,
   AlertLevel,
   AppRole,
   AuditAction,
@@ -97,9 +98,8 @@ export const TENANT_STATUS_LABELS: Record<TenantStatus, string> = {
 };
 
 export const TENANT_PLAN_LABELS: Record<TenantPlan, string> = {
-  essential: 'Essentiel',
+  pilot: 'Pilote',
   standard: 'Standard',
-  premium: 'Premium',
 };
 
 export const WASTE_TYPE_LABELS: Record<WasteType, string> = {
@@ -196,4 +196,14 @@ export const AUDIT_ACTION_LABELS: Record<AuditAction, string> = {
   upload: 'Téléversement',
   reorder: 'Réorganisation',
   send: 'Envoi',
+  platform_access: 'Accès éditeur',
 };
+
+export const STORE_PUBLICATION_STATUS_LABELS: Record<StorePublicationStatus, string> = {
+  not_started: 'Non démarré',
+  accounts_pending: 'Comptes en cours',
+  in_review: 'En revue',
+  published: 'Publiée',
+  rejected: 'Rejetée',
+};
+

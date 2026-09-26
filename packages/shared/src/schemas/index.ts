@@ -22,6 +22,7 @@ export * from './sorting-guide-item';
 export * from './tenant';
 export * from './tenant-app-config';
 export * from './tenant-branding';
+export * from './tenant-creation';
 export * from './tenant-module';
 export * from './tenant-store-info';
 export * from './topic';

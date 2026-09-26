@@ -8,7 +8,9 @@
 | 04 | Actualités, Agenda, Médiathèque | Terminé |
 | 05 | Signalements, Carte, Quartiers | Terminé |
 | 06 | Accueil, Notifications, Environnement, Démarches, Paramètres, Audit | Terminé |
-| 07–19 | Voir `00-plan-et-mode-emploi.md` | À faire |
+| 07 | Super-admin | Terminé |
+| 08–10 | App mobile | Reporté (l'app sera branchée après les lots 11–14) |
+| 11–19 | Voir `00-plan-et-mode-emploi.md` | À faire |
 
 ## Lot 01 — Monorepo et conventions
 
@@ -127,4 +129,26 @@
 - Tests : Vitest (règle anti-lassitude, justification côté dépôt, dernier admin), Playwright 9 parcours
   (accueil selon les droits, notification ciblée, justification, démarche du catalogue et réordonnancement
   au clavier, collectes, invitation puis connexion, dernier admin, 403 agent, diff d'audit) + axe sur toutes les pages.
+
+## Lot 07 — Super-admin
+
+| Route | Contenu |
+|---|---|
+| `/admin/communes` | tableau (nom, type, population, statut, offre, modules actifs, publication iOS / Android, dernière activité), filtres statut et offre |
+| `/admin/communes/nouvelle` | assistant 5 étapes (« Étape n sur 5 » annoncé et focalisé, retour possible, brouillon en mémoire) : identité (recherche geo.api.gouv.fr via `/api/admin/communes`, cache 24 h, saisie manuelle en repli, slug unique), marque (contrastes en direct, étape bloquée sous 4,5:1 avec ratio obtenu et attendu, logo SVG/PNG carré ≥ 1 024 px, aperçus article et icône), modules (V2 désactivés), premier admin (invité), récapitulatif |
+| `/admin/communes/{id}` | onglets Général (statut, offre, renouvellement, notes internes), Marque (avertissement nouvelle version), Modules (effet immédiat), Membres (écran du lot 06), Stores (identifiants, statuts par plateforme avec motif de rejet, checklist d'onboarding horodatée), Usage (4 graphiques 90 j + tableau), Zone sensible (suspendre / réactiver en ressaisissant le slug) ; bouton « Ouvrir l'espace de la commune » |
+| `/admin/usage` | tableau multi-communes sur 30 / 90 / 365 jours, tri, export CSV, signal « Commune peu active » (aucune publication depuis 14 jours) |
+| `/espace-suspendu` | page neutre pour les membres d'une commune suspendue |
+
+- `@app/shared` : offres `pilot` / `standard`, statuts de publication store, `ONBOARDING_STEP_DEFS`,
+  `Tenant.renewalDate` / `internalNotes`, `TenantCreationInput`, `slugify` / `uniqueSlug`,
+  `checkBrandingPalette`, `normalizeHexColor` (couleurs stockées en minuscules), action d'audit `platform_access`.
+- `@app/data` : `seedTenantDefaults` (12 catégories de lieux, 5 catégories de signalement, 1 service
+  « Services techniques », 6 thèmes, modules, `homeLayout`, fiche store), `tenants.create` (commune +
+  défauts + marque + invitation du 1er admin), `audit.recordPlatformAccess` (une entrée par 30 min).
+- Gardes : `/admin` renvoie une 404 hors super-admin ; commune suspendue → `/espace-suspendu` ; chaque
+  accès de l'éditeur à une commune est tracé dans son audit.
+- Tests : Vitest (défauts, création, slug, palette, accès tracé), Playwright 6 parcours (404 admin
+  commune, assistant complet, module Agenda, suspension / réactivation, audit des accès, axe sur /admin).
+  Les tests axe attendent la fin des animations et ignorent les toasts éphémères.
 

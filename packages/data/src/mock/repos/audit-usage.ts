@@ -1,8 +1,9 @@
 import type { AuditEntry } from '@app/shared';
 
 import type { AuditRepository, UsageRepository } from '../../ports';
-import { applyList, byString, requirePermission, requireStaff } from '../access';
+import { applyList, byString, requirePermission, requirePlatformAdmin, requireStaff } from '../access';
 import type { MockRuntime } from '../runtime';
+import { recordAudit } from '../runtime';
 
 export function createAuditRepositories(rt: MockRuntime): { audit: AuditRepository; usage: UsageRepository } {
   const { store } = rt;
@@ -23,6 +24,24 @@ export function createAuditRepositories(rt: MockRuntime): { audit: AuditReposito
         searchText: (e) => `${e.entity} ${e.action} ${Object.keys(e.diff).join(' ')}`,
         sorters: { at: byString((e: AuditEntry) => e.at) },
         defaultSort: { field: 'at', direction: 'desc' },
+      });
+    },
+
+    async recordPlatformAccess(ctx) {
+      const session = requirePlatformAdmin(ctx);
+      const since = new Date(rt.now().getTime() - 30 * 60_000).toISOString();
+      const recent = store.audit
+        .forTenant(ctx.tenantId)
+        .some((e) => e.action === 'platform_access' && e.actorId === session.userId && e.at >= since);
+      if (recent) return;
+      recordAudit(rt, {
+        tenantId: ctx.tenantId,
+        actorId: session.userId,
+        action: 'platform_access',
+        entity: 'tenant',
+        entityId: ctx.tenantId,
+        before: null,
+        after: { access: 'dashboard' },
       });
     },
   };

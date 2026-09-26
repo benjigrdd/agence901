@@ -48,6 +48,7 @@ import type {
   TenantAppConfigInput,
   TenantBranding,
   TenantBrandingInput,
+  TenantCreationInput,
   TenantInput,
   TenantModule,
   TenantModuleKey,
@@ -76,7 +77,8 @@ export interface TenantsRepository {
   getBySlug(ctx: SessionContext, slug: string): Promise<Tenant>;
   /** Informations publiques (app citoyenne, sans session). */
   getPublicBySlug(slug: string): Promise<Tenant>;
-  create(ctx: SessionContext, input: TenantInput): Promise<Tenant>;
+  /** Super-admin : cree la commune, ses donnees par defaut (`seedTenantDefaults`), sa marque et l'invitation du 1er admin. */
+  create(ctx: SessionContext, input: TenantCreationInput): Promise<Tenant>;
   update(ctx: DataContext, input: TenantInput): Promise<Tenant>;
 }
 
@@ -309,6 +311,8 @@ export type AuditFilters = {
 
 export interface AuditRepository {
   list(ctx: DataContext, params?: ListParams<AuditFilters>): Promise<ListResult<AuditEntry>>;
+  /** Trace l'acces du super-admin a l'espace d'une commune (au plus une entree par 30 minutes). */
+  recordPlatformAccess(ctx: DataContext): Promise<void>;
 }
 
 export interface UsageRepository {

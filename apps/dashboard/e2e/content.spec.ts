@@ -68,8 +68,8 @@ test.describe('actualités : circuit de validation', () => {
     await loginAs(page, 'Administrateur Bêta');
     await page.goto('/demo-beta/actualites/nouveau');
     const beta = await page.getByTestId('apercu-mobile').getAttribute('data-primary');
-    expect(alpha).toBe('#1D4E89');
-    expect(beta).toBe('#1F6B45');
+    expect(alpha).toBe('#1d4e89');
+    expect(beta).toBe('#1f6b45');
   });
 
   test('accessibilité : liste et éditeur', async ({ page }) => {

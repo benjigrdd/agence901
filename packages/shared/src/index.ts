@@ -13,5 +13,6 @@ export * from './reference';
 export * from './report-export';
 export * from './report-helpers';
 export * from './schemas';
+export * from './tenant-setup';
 export * from './waste-calendar';
 export * from './workflow';

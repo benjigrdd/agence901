@@ -16,6 +16,7 @@ export * from './context';
 export * from './errors';
 export * from './personas';
 export * from './ports';
+export * from './tenant-defaults';
 
 export type DataSource = 'mock' | 'supabase';
 

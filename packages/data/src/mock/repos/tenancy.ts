@@ -1,6 +1,10 @@
 import type { Tenant } from '@app/shared';
 import {
   accessibleTenants,
+  MembershipSchema,
+  normalizeHexColor,
+  ProfileSchema,
+  TenantCreationInputSchema,
   TenantAppConfigInputSchema,
   TenantAppConfigSchema,
   TenantBrandingInputSchema,
@@ -13,6 +17,7 @@ import {
 } from '@app/shared';
 
 import { ConflictError, ForbiddenError, NotFoundError } from '../../errors';
+import { seedTenantDefaults } from '../../tenant-defaults';
 import type {
   AppConfigRepository,
   BrandingRepository,
@@ -23,6 +28,13 @@ import type {
 import { byString, found, parseInput, requirePermission, requirePlatformAdmin, requireStaff, requireTenant } from '../access';
 import type { MockRuntime } from '../runtime';
 import { nowIso, recordAudit } from '../runtime';
+
+/** Couleurs stockees en hexadecimal sur 6 caracteres, en minuscules. */
+function lowercaseColors<T extends Record<string, string>>(colors: T): T {
+  const out: Record<string, string> = {};
+  for (const [k, v] of Object.entries(colors)) out[k] = normalizeHexColor(v) ?? v;
+  return { ...colors, ...out };
+}
 
 export function createTenancyRepositories(rt: MockRuntime): {
   tenants: TenantsRepository;
@@ -62,14 +74,67 @@ export function createTenancyRepositories(rt: MockRuntime): {
 
     async create(ctx, input) {
       const session = requirePlatformAdmin(ctx);
-      const data = parseInput(TenantInputSchema, input);
-      if ([...store.tenants.values()].some((t) => t.slug === data.slug)) {
+      const data = parseInput(TenantCreationInputSchema, input);
+      const { identity } = data;
+      if ([...store.tenants.values()].some((t) => t.slug === identity.slug)) {
         throw new ConflictError('Cet identifiant d’URL est déjà utilisé');
       }
       const now = nowIso(rt);
-      const tenant = parseInput(TenantSchema, { ...data, id: rt.newId(), createdAt: now, updatedAt: now });
+      const tenant = parseInput(TenantSchema, {
+        ...identity,
+        id: rt.newId(),
+        parentId: null,
+        status: 'onboarding',
+        timezone: 'Europe/Paris',
+        renewalDate: null,
+        internalNotes: null,
+        createdAt: now,
+        updatedAt: now,
+      });
       store.tenants.set(tenant.id, tenant);
+
+      const defaults = seedTenantDefaults({ tenantId: tenant.id, slug: tenant.slug, now, newId: rt.newId, enabledModules: data.modules });
+      for (const c of defaults.placeCategories) store.placeCategories.set(c);
+      for (const c of defaults.reportCategories) store.reportCategories.set(c);
+      for (const s of defaults.services) store.services.set(s);
+      for (const t of defaults.topics) store.topics.set(t);
+      for (const m of defaults.modules) store.modules.set(m);
+      store.appConfigs.set(defaults.appConfig);
+      store.storeInfos.set(defaults.storeInfo);
+      store.branding.set(
+        parseInput(TenantBrandingSchema, {
+          ...data.branding,
+          colors: lowercaseColors(data.branding.colors),
+          iconUrl: null,
+          id: rt.newId(),
+          tenantId: tenant.id,
+          createdAt: now,
+          updatedAt: now,
+        }),
+      );
+
+      // Premier administrateur : invitation (l'email partira au lot 13).
+      const email = data.firstAdmin.email.toLowerCase();
+      let profile = [...store.profiles.values()].find((p) => p.email.toLowerCase() === email);
+      if (!profile) {
+        profile = parseInput(ProfileSchema, { id: rt.newId(), displayName: data.firstAdmin.displayName, email, avatarUrl: null, lastSignInAt: null, createdAt: now, updatedAt: now });
+        store.profiles.set(profile.id, profile);
+      }
+      const membership = parseInput(MembershipSchema, {
+        id: rt.newId(),
+        tenantId: tenant.id,
+        userId: profile.id,
+        role: 'admin',
+        invitedAt: now,
+        acceptedAt: null,
+        disabledAt: null,
+        createdAt: now,
+        updatedAt: now,
+      });
+      store.memberships.set(membership);
+
       recordAudit(rt, { tenantId: tenant.id, actorId: session.userId, action: 'create', entity: 'tenant', entityId: tenant.id, before: null, after: tenant });
+      recordAudit(rt, { tenantId: tenant.id, actorId: session.userId, action: 'invite', entity: 'membership', entityId: membership.id, before: null, after: { email, role: 'admin' } });
       return tenant;
     },
 
@@ -95,7 +160,8 @@ export function createTenancyRepositories(rt: MockRuntime): {
     async update(ctx, input) {
       const session = requirePlatformAdmin(ctx);
       requireTenant(store, ctx.tenantId);
-      const data = parseInput(TenantBrandingInputSchema, input);
+      const parsed = parseInput(TenantBrandingInputSchema, input);
+      const data = { ...parsed, colors: lowercaseColors(parsed.colors) };
       const existing = store.branding.forTenant(ctx.tenantId)[0];
       const now = nowIso(rt);
       const next = parseInput(TenantBrandingSchema, {

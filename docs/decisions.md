@@ -88,3 +88,10 @@ Au-delà de 3 notifications non urgentes le même jour (Europe/Paris, date d'env
 une justification est obligatoire. La règle vit dans `@app/shared/notification-rules.ts`, est appliquée
 par le dépôt (mock, puis Supabase au lot 14) et affichée par le composeur. Les notifications urgentes y échappent.
 
+## ADR-011 — Création de commune et données par défaut (lot 07)
+
+La création passe par un seul appel `tenants.create(TenantCreationInput)` qui initialise la commune, ses
+données par défaut (`seedTenantDefaults`, reprise en SQL au lot 11), sa marque et l'invitation du premier
+administrateur. Offres ramenées à `pilot` et `standard`. `/admin` répond 404 à tout autre compte que
+l'éditeur, pour ne pas révéler l'espace.
+

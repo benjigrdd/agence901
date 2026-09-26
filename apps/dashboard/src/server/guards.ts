@@ -24,6 +24,8 @@ export const requireTenant = cache(async (slug: string): Promise<TenantContext> 
   const session = await requireSession();
   try {
     const tenant = await getRepos().tenants.getBySlug({ session }, slug);
+    // Commune suspendue : ses membres sont renvoyes vers une page neutre ; l'editeur garde l'acces.
+    if (tenant.status === 'suspended' && !isPlatformAdmin(session)) redirect('/espace-suspendu');
     return { session, tenant, ctx: { session, tenantId: tenant.id } };
   } catch (error) {
     if (error instanceof NotFoundError) notFound();
@@ -50,8 +52,17 @@ export async function requireTenantAdmin(slug: string): Promise<TenantContext> {
   return context;
 }
 
+/** Espace editeur : 404 pour tout autre compte (on ne revele pas son existence). */
 export async function requirePlatformAdmin(): Promise<Session> {
   const session = await requireSession();
-  if (!isPlatformAdmin(session)) forbidden();
+  if (!isPlatformAdmin(session)) notFound();
   return session;
+}
+
+/** Contexte d'une commune pour l'editeur, depuis son identifiant. */
+export async function requirePlatformTenant(tenantId: string): Promise<TenantContext> {
+  const session = await requirePlatformAdmin();
+  const tenant = (await getRepos().tenants.list({ session })).items.find((t) => t.id === tenantId);
+  if (!tenant) notFound();
+  return { session, tenant, ctx: { session, tenantId: tenant.id } };
 }
