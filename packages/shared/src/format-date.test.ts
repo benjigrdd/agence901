@@ -27,3 +27,19 @@ describe('formatDateFr', () => {
     expect(formatDateFr(new Date('2026-10-25T01:30:00Z'), 'HH:mm xxx')).toBe('02:30 +01:00');
   });
 });
+
+describe('champs datetime-local en heure de Paris', () => {
+  it('fait l aller-retour ISO UTC <-> saisie locale, y compris en hiver', async () => {
+    const { isoToParisInput, parisInputToIso } = await import('./format-date');
+    expect(isoToParisInput('2026-10-12T06:00:00.000Z')).toBe('2026-10-12T08:00');
+    expect(parisInputToIso('2026-10-12T08:00')).toBe('2026-10-12T06:00:00.000Z');
+    expect(parisInputToIso('2026-12-12T08:00')).toBe('2026-12-12T07:00:00.000Z');
+    expect(parisInputToIso('pas une date')).toBeNull();
+    expect(isoToParisInput(null)).toBe('');
+  });
+
+  it('formate « 12 octobre à 8 h 00 »', async () => {
+    const { formatDateTimeLongFr } = await import('./format-date');
+    expect(formatDateTimeLongFr(new Date('2026-10-12T06:00:00Z'), new Date('2026-09-26T10:00:00Z'))).toBe('12 octobre à 8 h 00');
+  });
+});

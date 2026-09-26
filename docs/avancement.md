@@ -4,7 +4,7 @@
 |---|---|---|
 | 01 | Monorepo et conventions | Terminé (app mobile : 2 fichiers en attente, voir ci-dessous) |
 | 02 | Contrats de données et couche mock | Terminé |
-| 03 | Coque du dashboard | À faire |
+| 03 | Coque du dashboard | Terminé |
 | 04 | Actualités, Agenda, Médiathèque | À faire |
 | 05 | Signalements, Carte, Quartiers | À faire |
 | 06 | Accueil, Notifications, Environnement, Démarches, Paramètres, Audit | À faire |
@@ -33,6 +33,33 @@
   50 dans `data` dont la suite `describeRepositoryContract` (isolation lecture/écriture par dépôt,
   critères d'acceptation) à rejouer sur Supabase au lot 14.
 - Détail des dépôts : `docs/data-contracts.md`.
+
+## Lot 03 — Coque du dashboard
+
+- Accès serveur : `src/server/repos.ts` (`getRepos()` selon `DATA_SOURCE`), `session.ts` (persona via le
+  cookie `dev_persona`, même signature qu'au lot 13), `guards.ts` (`requireSession`, `requireTenant` → 404,
+  `requirePermission` → 403 via `forbidden()`, module désactivé → 404, `requireTenantAdmin`,
+  `requirePlatformAdmin`), `errors.ts` (erreurs traduites pour les server actions).
+- Navigation filtrée par modules actifs et droits (`buildNavigation`, 8 tests), modules V2 « Bientôt ».
+- Composants : `PageHeader`, `EmptyState`, `DataTable` (TanStack Table v8), `StatusBadge`, `ConfirmDialog`,
+  `FormField`, `DateTimeField` (Europe/Paris), `Can`, toasts `sonner`, sélecteur de persona (mock seulement).
+- Accessibilité : lien d'évitement, landmarks, titres « Page · Commune · Produit », focus 2 px,
+  `prefers-reduced-motion`. Playwright + axe : 6 tests, zéro violation grave ou critique.
+
+### Routes
+
+| Route | Accès |
+|---|---|
+| `/` | aiguillage selon la session |
+| `/connexion`, `/choisir-commune`, `/403` | public / personnel |
+| `/{commune}` (accueil) | membre de la commune |
+| `/{commune}/actualites`, `agenda`, `mediatheque` | `news`, `events`, `media` en lecture |
+| `/{commune}/signalements`, `carte`, `quartiers` | `reports`, `map`, `districts` en lecture |
+| `/{commune}/notifications`, `environnement`, `demarches` | module correspondant en lecture |
+| `/{commune}/parametres/membres` | admin de la commune |
+| `/{commune}/parametres/services`, `thematiques`, `commune` | `settings` en lecture |
+| `/{commune}/audit` | admin de la commune |
+| `/admin/communes`, `/admin/communes/nouvelle`, `/admin/communes/{id}`, `/admin/usage` | super-admin |
 
 ### Points en attente
 

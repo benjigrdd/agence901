@@ -1,0 +1,23 @@
+/** Libelles des segments d'URL pour le fil d'Ariane. */
+export const BREADCRUMB_LABELS: Record<string, string> = {
+  actualites: 'Actualités',
+  agenda: 'Agenda',
+  mediatheque: 'Médiathèque',
+  signalements: 'Signalements',
+  carte: 'Carte',
+  categories: 'Catégories',
+  environnement: 'Environnement',
+  demarches: 'Démarches',
+  notifications: 'Notifications',
+  quartiers: 'Quartiers',
+  parametres: 'Paramètres',
+  membres: 'Membres',
+  services: 'Services',
+  thematiques: 'Thématiques',
+  commune: 'Commune',
+  audit: "Journal d'audit",
+  nouveau: 'Nouveau',
+  nouvelle: 'Nouvelle',
+  communes: 'Communes',
+  usage: 'Usage',
+};
