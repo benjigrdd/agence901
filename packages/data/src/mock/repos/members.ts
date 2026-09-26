@@ -11,7 +11,7 @@ import {
 import type { DataContext } from '../../context';
 import { ConflictError, NotFoundError } from '../../errors';
 import type { MembersRepository, MemberView } from '../../ports';
-import { applyList, byString, parseInput, requireTenantAdmin } from '../access';
+import { applyList, byString, parseInput, requireStaff, requireTenantAdmin } from '../access';
 import type { MockRuntime } from '../runtime';
 import { nowIso, recordAudit } from '../runtime';
 
@@ -74,6 +74,16 @@ export function createMembersRepository(rt: MockRuntime): MembersRepository {
   };
 
   return {
+    async directory(ctx) {
+      requireStaff(store, ctx);
+      const ids = new Set(store.memberships.forTenant(ctx.tenantId).map((m) => m.userId));
+      for (const id of store.platformAdminIds) ids.add(id);
+      return [...ids].flatMap((userId) => {
+        const profile = store.profiles.get(userId);
+        return profile ? [{ userId, displayName: profile.displayName }] : [];
+      });
+    },
+
     async list(ctx, params) {
       requireTenantAdmin(store, ctx);
       const statuses = params?.filters?.status;

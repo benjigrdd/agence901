@@ -113,7 +113,11 @@ export type MemberView = {
 
 export type MemberFilters = { status?: MembershipStatus[] };
 
+export type StaffDirectoryEntry = { userId: string; displayName: string };
+
 export interface MembersRepository {
+  /** Noms du personnel de la commune (auteurs, historiques) : lisible par tout le personnel. */
+  directory(ctx: DataContext): Promise<StaffDirectoryEntry[]>;
   list(ctx: DataContext, params?: ListParams<MemberFilters>): Promise<ListResult<MemberView>>;
   invite(ctx: DataContext, input: MemberInviteInput): Promise<MemberView>;
   updatePermissions(ctx: DataContext, membershipId: string, input: MemberPermissionsInput): Promise<MemberView>;

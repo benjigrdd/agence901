@@ -32,7 +32,7 @@ export type RichTextOrderedList = {
 export type RichTextBlock = RichTextParagraph | RichTextHeading | RichTextBulletList | RichTextOrderedList;
 export type RichTextDoc = { type: 'doc'; content: RichTextBlock[] };
 
-const markSchema: z.ZodType<RichTextMark> = z.discriminatedUnion('type', [
+const markSchema: z.ZodType<RichTextMark, RichTextMark> = z.discriminatedUnion('type', [
   z.strictObject({ type: z.literal('bold') }),
   z.strictObject({ type: z.literal('italic') }),
   z.strictObject({
@@ -52,34 +52,34 @@ const textSchema = z.strictObject({
   marks: z.array(markSchema).optional(),
 });
 
-const inlineSchema: z.ZodType<RichTextInline> = z.union([
+const inlineSchema: z.ZodType<RichTextInline, RichTextInline> = z.union([
   textSchema,
   z.strictObject({ type: z.literal('hardBreak') }),
 ]);
 
-const paragraphSchema: z.ZodType<RichTextParagraph> = z.strictObject({
+const paragraphSchema: z.ZodType<RichTextParagraph, RichTextParagraph> = z.strictObject({
   type: z.literal('paragraph'),
   content: z.array(inlineSchema).optional(),
 });
 
-const headingSchema: z.ZodType<RichTextHeading> = z.strictObject({
+const headingSchema: z.ZodType<RichTextHeading, RichTextHeading> = z.strictObject({
   type: z.literal('heading'),
   attrs: z.strictObject({ level: z.union([z.literal(2), z.literal(3)], { error: 'Titres de niveau 2 ou 3 uniquement' }) }),
   content: z.array(inlineSchema).optional(),
 });
 
-const listItemSchema: z.ZodType<RichTextListItem> = z.lazy(() =>
+const listItemSchema: z.ZodType<RichTextListItem, RichTextListItem> = z.lazy(() =>
   z.strictObject({
     type: z.literal('listItem'),
     content: z.array(z.union([paragraphSchema, bulletListSchema, orderedListSchema])).min(1),
   }),
 );
 
-const bulletListSchema: z.ZodType<RichTextBulletList> = z.lazy(() =>
+const bulletListSchema: z.ZodType<RichTextBulletList, RichTextBulletList> = z.lazy(() =>
   z.strictObject({ type: z.literal('bulletList'), content: z.array(listItemSchema).min(1) }),
 );
 
-const orderedListSchema: z.ZodType<RichTextOrderedList> = z.lazy(() =>
+const orderedListSchema: z.ZodType<RichTextOrderedList, RichTextOrderedList> = z.lazy(() =>
   z.strictObject({
     type: z.literal('orderedList'),
     attrs: z
@@ -89,12 +89,12 @@ const orderedListSchema: z.ZodType<RichTextOrderedList> = z.lazy(() =>
   }),
 );
 
-const blockSchema: z.ZodType<RichTextBlock> = z.union(
+const blockSchema: z.ZodType<RichTextBlock, RichTextBlock> = z.union(
   [paragraphSchema, headingSchema, bulletListSchema, orderedListSchema],
   { error: 'Élément de texte non autorisé' },
 );
 
-export const RichTextDocSchema: z.ZodType<RichTextDoc> = z.strictObject({
+export const RichTextDocSchema: z.ZodType<RichTextDoc, RichTextDoc> = z.strictObject({
   type: z.literal('doc'),
   content: z.array(blockSchema),
 });

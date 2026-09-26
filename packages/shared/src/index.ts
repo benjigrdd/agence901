@@ -5,6 +5,7 @@ export * from './geo';
 export * from './i18n/fr';
 export * from './permissions';
 export * from './product';
+export * from './recurrence';
 export * from './reference';
 export * from './report-helpers';
 export * from './schemas';

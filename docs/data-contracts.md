@@ -37,7 +37,7 @@ le journal d'audit et la gestion des membres sont réservés aux admins. Sans `a
 | `modules` | `list`, `setEnabled` | public | super-admin |
 | `appConfig` | `get`, `update` | public | `settings:edit` |
 | `storeInfo` | `get`, `update` | super-admin | super-admin |
-| `members` | `list`, `invite`, `updatePermissions`, `disable`, `enable` | admin | admin (garde du dernier admin) |
+| `members` | `directory`, `list`, `invite`, `updatePermissions`, `disable`, `enable` | `directory` : personnel ; le reste : admin | admin (garde du dernier admin) |
 | `posts` | `list`, `get`, `create`, `update`, `transition`, `reviews`, `counts` | `news:read` | `news:edit` ; transitions selon le workflow |
 | `events` | idem `posts` | `events:read` | `events:edit` ; transitions selon le workflow |
 | `media` | `list`, `get`, `upload`, `update`, `remove` | `media:read` | `media:edit` (texte alternatif obligatoire, suppression interdite si utilisée) |

@@ -5,7 +5,7 @@
 | 01 | Monorepo et conventions | Terminé (app mobile : 2 fichiers en attente, voir ci-dessous) |
 | 02 | Contrats de données et couche mock | Terminé |
 | 03 | Coque du dashboard | Terminé |
-| 04 | Actualités, Agenda, Médiathèque | À faire |
+| 04 | Actualités, Agenda, Médiathèque | Terminé (1 test E2E instable à vérifier) |
 | 05 | Signalements, Carte, Quartiers | À faire |
 | 06 | Accueil, Notifications, Environnement, Démarches, Paramètres, Audit | À faire |
 | 07–19 | Voir `00-plan-et-mode-emploi.md` | À faire |
