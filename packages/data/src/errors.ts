@@ -1,6 +1,6 @@
 import type { z } from 'zod';
 
-export type DataErrorCode = 'forbidden' | 'aal2_required' | 'not_found' | 'validation' | 'conflict' | 'not_implemented';
+export type DataErrorCode = 'forbidden' | 'aal2_required' | 'not_found' | 'validation' | 'conflict' | 'not_implemented' | 'unknown';
 
 export class DataError extends Error {
   constructor(

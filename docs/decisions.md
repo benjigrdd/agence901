@@ -116,3 +116,11 @@ serveur (`aal2` dans la `Session`) et base (`private.is_aal2()` dans toutes les 
 utilisent `token_hash` vérifié côté serveur (`/auth/confirm`). Les opérations d'administration Auth
 (invitations) passent par une Edge Function : le dashboard n'a jamais la clé `service_role`.
 
+## ADR-015 — Adaptateur Supabase à résolveur de client (lot 14)
+
+L'adaptateur reçoit une fonction qui fournit le client Supabase de l'appelant plutôt qu'un client fixe :
+chaque requête s'exécute avec la session réelle (RLS), et les tests de contrat peuvent jouer toutes les
+personas. Les listes sont filtrées, triées et paginées côté adaptateur, comme dans le mock (volumes d'une
+commune de moins de 50 000 habitants) ; les calculs géographiques et les indicateurs passent par des RPC
+PostGIS. Chaque ligne lue est validée par zod : une dérive du schéma échoue immédiatement.
+

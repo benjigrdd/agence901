@@ -2,7 +2,7 @@ import { CONTENT_STATUSES, POST_TYPES, REPORT_STATUSES } from '@app/shared';
 import { describe, expect, it } from 'vitest';
 
 import { ctxOf, describeRepositoryContract } from '../contract';
-import { ConflictError, NotImplementedError } from '../errors';
+import { ConflictError } from '../errors';
 import { createRepositories } from '../index';
 import { PERSONA_SESSIONS, TENANT_IDS, USER_IDS } from '../personas';
 import { createFixtures, validateFixtures } from './fixtures';
@@ -98,7 +98,8 @@ describe('mock : règles spécifiques', () => {
     expect(Date.now() - started).toBeGreaterThanOrEqual(4);
   });
 
-  it("l'adaptateur Supabase n'est pas encore disponible", () => {
-    expect(() => createRepositories({ source: 'supabase', client: null })).toThrow(NotImplementedError);
+  it("l'adaptateur Supabase expose les memes depots que le mock", () => {
+    const supabase = createRepositories({ source: 'supabase', resolve: () => { throw new Error('non appele'); } });
+    expect(Object.keys(supabase).sort()).toEqual(Object.keys(createMockRepositories({ fresh: true })).sort());
   });
 });

@@ -13,7 +13,8 @@
 | 11 | Supabase : schéma | Terminé |
 | 12 | RLS, stockage, tests d'isolation | Terminé |
 | 13 | Auth du personnel, 2FA, invitations | Terminé |
-| 14–19 | Voir `00-plan-et-mode-emploi.md` | À faire |
+| 14 | Branchement du dashboard sur Supabase | Terminé |
+| 15–19 | Voir `00-plan-et-mode-emploi.md` | À faire |
 
 ## Lot 01 — Monorepo et conventions
 
@@ -196,4 +197,24 @@
 - Tests : `@app/shared/password` (3), Playwright sur Supabase local `pnpm --filter dashboard test:e2e:supabase`
   (5 : message générique, redirection sans session, mot de passe + TOTP → aal2, code faux, configuration obligatoire).
 - Détail : `docs/auth.md`.
+
+## Lot 14 — Branchement du dashboard sur Supabase
+
+- `packages/data/src/supabase/` : adaptateur complet des 22 dépôts (un fichier par domaine), `mappers.ts`
+  (chaque ligne validée par zod), `core.ts` (gardes identiques au mock, erreurs PostgREST / `APP_…` →
+  erreurs du domaine en français, conversions GeoJSON / EWKT), `createSupabaseRepositories(resolve)`.
+- Le résolveur de client fournit le client de l'appelant : côté dashboard, le client de la requête
+  (cookies, RLS appliquée) ; dans les tests, un jeton local par persona.
+- Migration `api_views_rpc` : vues `v_*` (géographie en GeoJSON, `security_invoker`), RPC
+  `transition_content`, `update_report_status` (+ file `push_outbox` si public), `assign_report`,
+  `add_report_note`, `reports_nearby`, `report_ids_in_district`, `report_stats`, `district_stats`,
+  `estimate_audience`, `reorder_procedures`, `set_member_permissions`, `create_tenant`,
+  `record_platform_access` ; action d'audit explicite (`transition`, `reorder`, `permissions`).
+- Médiathèque sur Storage (`public-media`), photos de signalement en URLs signées (`report-photos`).
+  Invitations et premier admin d'une commune via l'Edge Function `invite-member`.
+- Seed : dépose aussi les fichiers de démonstration dans Storage (clé locale lue via `supabase status`).
+- Tests : **la même suite de contrat passe sur le mock et sur Supabase (40/40)**
+  (`SUPABASE_CONTRACT=1`, en CI) ; Playwright Supabase 10 parcours (auth + accueil, traitement d'un
+  signalement, validation agent → admin, téléversement Storage, droits 403/404, audit des accès éditeur).
+- Bascule : `DATA_SOURCE=supabase` + `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
 

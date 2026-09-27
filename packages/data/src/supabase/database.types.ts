@@ -45,6 +45,13 @@ export type Database = {
             referencedRelation: 'tenants';
             referencedColumns: ['id'];
           },
+          {
+            foreignKeyName: 'audit_log_tenant_id_fkey';
+            columns: ['tenant_id'];
+            isOneToOne: false;
+            referencedRelation: 'v_tenants';
+            referencedColumns: ['id'];
+          },
         ];
       };
       citizen_profiles: {
@@ -102,6 +109,20 @@ export type Database = {
             referencedColumns: ['id'];
           },
           {
+            foreignKeyName: 'citizen_profiles_tenant_id_fkey';
+            columns: ['tenant_id'];
+            isOneToOne: false;
+            referencedRelation: 'v_tenants';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'citizen_profiles_tenant_id_waste_zone_id_fkey';
+            columns: ['tenant_id', 'waste_zone_id'];
+            isOneToOne: false;
+            referencedRelation: 'v_waste_zones';
+            referencedColumns: ['tenant_id', 'id'];
+          },
+          {
             foreignKeyName: 'citizen_profiles_tenant_id_waste_zone_id_fkey';
             columns: ['tenant_id', 'waste_zone_id'];
             isOneToOne: false;
@@ -152,6 +173,13 @@ export type Database = {
             referencedRelation: 'tenants';
             referencedColumns: ['id'];
           },
+          {
+            foreignKeyName: 'content_reviews_tenant_id_fkey';
+            columns: ['tenant_id'];
+            isOneToOne: false;
+            referencedRelation: 'v_tenants';
+            referencedColumns: ['id'];
+          },
         ];
       };
       districts: {
@@ -188,6 +216,13 @@ export type Database = {
             columns: ['tenant_id'];
             isOneToOne: false;
             referencedRelation: 'tenants';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'districts_tenant_id_fkey';
+            columns: ['tenant_id'];
+            isOneToOne: false;
+            referencedRelation: 'v_tenants';
             referencedColumns: ['id'];
           },
         ];
@@ -284,10 +319,24 @@ export type Database = {
             referencedColumns: ['id'];
           },
           {
+            foreignKeyName: 'events_tenant_id_fkey';
+            columns: ['tenant_id'];
+            isOneToOne: false;
+            referencedRelation: 'v_tenants';
+            referencedColumns: ['id'];
+          },
+          {
             foreignKeyName: 'events_tenant_id_place_id_fkey';
             columns: ['tenant_id', 'place_id'];
             isOneToOne: false;
             referencedRelation: 'places';
+            referencedColumns: ['tenant_id', 'id'];
+          },
+          {
+            foreignKeyName: 'events_tenant_id_place_id_fkey';
+            columns: ['tenant_id', 'place_id'];
+            isOneToOne: false;
+            referencedRelation: 'v_places';
             referencedColumns: ['tenant_id', 'id'];
           },
         ];
@@ -367,6 +416,13 @@ export type Database = {
             referencedRelation: 'tenants';
             referencedColumns: ['id'];
           },
+          {
+            foreignKeyName: 'media_tenant_id_fkey';
+            columns: ['tenant_id'];
+            isOneToOne: false;
+            referencedRelation: 'v_tenants';
+            referencedColumns: ['id'];
+          },
         ];
       };
       membership_permissions: {
@@ -403,6 +459,13 @@ export type Database = {
             columns: ['tenant_id'];
             isOneToOne: false;
             referencedRelation: 'tenants';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'membership_permissions_tenant_id_fkey';
+            columns: ['tenant_id'];
+            isOneToOne: false;
+            referencedRelation: 'v_tenants';
             referencedColumns: ['id'];
           },
           {
@@ -456,6 +519,13 @@ export type Database = {
             referencedRelation: 'tenants';
             referencedColumns: ['id'];
           },
+          {
+            foreignKeyName: 'memberships_tenant_id_fkey';
+            columns: ['tenant_id'];
+            isOneToOne: false;
+            referencedRelation: 'v_tenants';
+            referencedColumns: ['id'];
+          },
         ];
       };
       notification_deliveries: {
@@ -498,6 +568,13 @@ export type Database = {
             columns: ['tenant_id'];
             isOneToOne: false;
             referencedRelation: 'tenants';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'notification_deliveries_tenant_id_fkey';
+            columns: ['tenant_id'];
+            isOneToOne: false;
+            referencedRelation: 'v_tenants';
             referencedColumns: ['id'];
           },
           {
@@ -576,6 +653,13 @@ export type Database = {
             referencedRelation: 'tenants';
             referencedColumns: ['id'];
           },
+          {
+            foreignKeyName: 'notifications_tenant_id_fkey';
+            columns: ['tenant_id'];
+            isOneToOne: false;
+            referencedRelation: 'v_tenants';
+            referencedColumns: ['id'];
+          },
         ];
       };
       place_categories: {
@@ -621,6 +705,13 @@ export type Database = {
             columns: ['tenant_id'];
             isOneToOne: false;
             referencedRelation: 'tenants';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'place_categories_tenant_id_fkey';
+            columns: ['tenant_id'];
+            isOneToOne: false;
+            referencedRelation: 'v_tenants';
             referencedColumns: ['id'];
           },
         ];
@@ -693,6 +784,13 @@ export type Database = {
             columns: ['tenant_id'];
             isOneToOne: false;
             referencedRelation: 'tenants';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'places_tenant_id_fkey';
+            columns: ['tenant_id'];
+            isOneToOne: false;
+            referencedRelation: 'v_tenants';
             referencedColumns: ['id'];
           },
           {
@@ -783,6 +881,13 @@ export type Database = {
             referencedRelation: 'tenants';
             referencedColumns: ['id'];
           },
+          {
+            foreignKeyName: 'posts_tenant_id_fkey';
+            columns: ['tenant_id'];
+            isOneToOne: false;
+            referencedRelation: 'v_tenants';
+            referencedColumns: ['id'];
+          },
         ];
       };
       procedures: {
@@ -828,6 +933,13 @@ export type Database = {
             columns: ['tenant_id'];
             isOneToOne: false;
             referencedRelation: 'tenants';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'procedures_tenant_id_fkey';
+            columns: ['tenant_id'];
+            isOneToOne: false;
+            referencedRelation: 'v_tenants';
             referencedColumns: ['id'];
           },
         ];
@@ -892,6 +1004,13 @@ export type Database = {
             referencedRelation: 'tenants';
             referencedColumns: ['id'];
           },
+          {
+            foreignKeyName: 'push_outbox_tenant_id_fkey';
+            columns: ['tenant_id'];
+            isOneToOne: false;
+            referencedRelation: 'v_tenants';
+            referencedColumns: ['id'];
+          },
         ];
       };
       push_tokens: {
@@ -937,6 +1056,13 @@ export type Database = {
             columns: ['tenant_id'];
             isOneToOne: false;
             referencedRelation: 'tenants';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'push_tokens_tenant_id_fkey';
+            columns: ['tenant_id'];
+            isOneToOne: false;
+            referencedRelation: 'v_tenants';
             referencedColumns: ['id'];
           },
         ];
@@ -985,6 +1111,13 @@ export type Database = {
             columns: ['tenant_id'];
             isOneToOne: false;
             referencedRelation: 'tenants';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'report_categories_tenant_id_fkey';
+            columns: ['tenant_id'];
+            isOneToOne: false;
+            referencedRelation: 'v_tenants';
             referencedColumns: ['id'];
           },
         ];
@@ -1038,10 +1171,24 @@ export type Database = {
             referencedColumns: ['id'];
           },
           {
+            foreignKeyName: 'report_events_tenant_id_fkey';
+            columns: ['tenant_id'];
+            isOneToOne: false;
+            referencedRelation: 'v_tenants';
+            referencedColumns: ['id'];
+          },
+          {
             foreignKeyName: 'report_events_tenant_id_report_id_fkey';
             columns: ['tenant_id', 'report_id'];
             isOneToOne: false;
             referencedRelation: 'reports';
+            referencedColumns: ['tenant_id', 'id'];
+          },
+          {
+            foreignKeyName: 'report_events_tenant_id_report_id_fkey';
+            columns: ['tenant_id', 'report_id'];
+            isOneToOne: false;
+            referencedRelation: 'v_reports';
             referencedColumns: ['tenant_id', 'id'];
           },
         ];
@@ -1086,10 +1233,24 @@ export type Database = {
             referencedColumns: ['id'];
           },
           {
+            foreignKeyName: 'report_media_tenant_id_fkey';
+            columns: ['tenant_id'];
+            isOneToOne: false;
+            referencedRelation: 'v_tenants';
+            referencedColumns: ['id'];
+          },
+          {
             foreignKeyName: 'report_media_tenant_id_report_id_fkey';
             columns: ['tenant_id', 'report_id'];
             isOneToOne: false;
             referencedRelation: 'reports';
+            referencedColumns: ['tenant_id', 'id'];
+          },
+          {
+            foreignKeyName: 'report_media_tenant_id_report_id_fkey';
+            columns: ['tenant_id', 'report_id'];
+            isOneToOne: false;
+            referencedRelation: 'v_reports';
             referencedColumns: ['tenant_id', 'id'];
           },
         ];
@@ -1127,7 +1288,7 @@ export type Database = {
           id?: string;
           point: unknown;
           priority?: Database['public']['Enums']['report_priority'];
-          reference: string;
+          reference?: string;
           reporter_id?: string | null;
           resolved_at?: string | null;
           service_id?: string | null;
@@ -1171,10 +1332,24 @@ export type Database = {
             referencedColumns: ['tenant_id', 'id'];
           },
           {
+            foreignKeyName: 'reports_tenant_id_duplicate_of_id_fkey';
+            columns: ['tenant_id', 'duplicate_of_id'];
+            isOneToOne: false;
+            referencedRelation: 'v_reports';
+            referencedColumns: ['tenant_id', 'id'];
+          },
+          {
             foreignKeyName: 'reports_tenant_id_fkey';
             columns: ['tenant_id'];
             isOneToOne: false;
             referencedRelation: 'tenants';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'reports_tenant_id_fkey';
+            columns: ['tenant_id'];
+            isOneToOne: false;
+            referencedRelation: 'v_tenants';
             referencedColumns: ['id'];
           },
           {
@@ -1219,6 +1394,13 @@ export type Database = {
             referencedRelation: 'tenants';
             referencedColumns: ['id'];
           },
+          {
+            foreignKeyName: 'services_tenant_id_fkey';
+            columns: ['tenant_id'];
+            isOneToOne: false;
+            referencedRelation: 'v_tenants';
+            referencedColumns: ['id'];
+          },
         ];
       };
       sorting_guide_items: {
@@ -1257,6 +1439,13 @@ export type Database = {
             referencedRelation: 'tenants';
             referencedColumns: ['id'];
           },
+          {
+            foreignKeyName: 'sorting_guide_items_tenant_id_fkey';
+            columns: ['tenant_id'];
+            isOneToOne: false;
+            referencedRelation: 'v_tenants';
+            referencedColumns: ['id'];
+          },
         ];
       };
       tenant_app_config: {
@@ -1293,6 +1482,13 @@ export type Database = {
             columns: ['tenant_id'];
             isOneToOne: true;
             referencedRelation: 'tenants';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'tenant_app_config_tenant_id_fkey';
+            columns: ['tenant_id'];
+            isOneToOne: true;
+            referencedRelation: 'v_tenants';
             referencedColumns: ['id'];
           },
         ];
@@ -1339,6 +1535,13 @@ export type Database = {
             referencedRelation: 'tenants';
             referencedColumns: ['id'];
           },
+          {
+            foreignKeyName: 'tenant_branding_tenant_id_fkey';
+            columns: ['tenant_id'];
+            isOneToOne: true;
+            referencedRelation: 'v_tenants';
+            referencedColumns: ['id'];
+          },
         ];
       };
       tenant_counters: {
@@ -1368,6 +1571,13 @@ export type Database = {
             referencedRelation: 'tenants';
             referencedColumns: ['id'];
           },
+          {
+            foreignKeyName: 'tenant_counters_tenant_id_fkey';
+            columns: ['tenant_id'];
+            isOneToOne: false;
+            referencedRelation: 'v_tenants';
+            referencedColumns: ['id'];
+          },
         ];
       };
       tenant_internal_notes: {
@@ -1392,6 +1602,13 @@ export type Database = {
             columns: ['tenant_id'];
             isOneToOne: true;
             referencedRelation: 'tenants';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'tenant_internal_notes_tenant_id_fkey';
+            columns: ['tenant_id'];
+            isOneToOne: true;
+            referencedRelation: 'v_tenants';
             referencedColumns: ['id'];
           },
         ];
@@ -1430,6 +1647,13 @@ export type Database = {
             columns: ['tenant_id'];
             isOneToOne: false;
             referencedRelation: 'tenants';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'tenant_modules_tenant_id_fkey';
+            columns: ['tenant_id'];
+            isOneToOne: false;
+            referencedRelation: 'v_tenants';
             referencedColumns: ['id'];
           },
         ];
@@ -1492,6 +1716,13 @@ export type Database = {
             columns: ['tenant_id'];
             isOneToOne: true;
             referencedRelation: 'tenants';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'tenant_store_info_tenant_id_fkey';
+            columns: ['tenant_id'];
+            isOneToOne: true;
+            referencedRelation: 'v_tenants';
             referencedColumns: ['id'];
           },
         ];
@@ -1559,6 +1790,13 @@ export type Database = {
             referencedRelation: 'tenants';
             referencedColumns: ['id'];
           },
+          {
+            foreignKeyName: 'tenants_parent_id_fkey';
+            columns: ['parent_id'];
+            isOneToOne: false;
+            referencedRelation: 'v_tenants';
+            referencedColumns: ['id'];
+          },
         ];
       };
       topics: {
@@ -1592,6 +1830,13 @@ export type Database = {
             columns: ['tenant_id'];
             isOneToOne: false;
             referencedRelation: 'tenants';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'topics_tenant_id_fkey';
+            columns: ['tenant_id'];
+            isOneToOne: false;
+            referencedRelation: 'v_tenants';
             referencedColumns: ['id'];
           },
         ];
@@ -1630,6 +1875,13 @@ export type Database = {
             columns: ['tenant_id'];
             isOneToOne: false;
             referencedRelation: 'tenants';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'usage_daily_tenant_id_fkey';
+            columns: ['tenant_id'];
+            isOneToOne: false;
+            referencedRelation: 'v_tenants';
             referencedColumns: ['id'];
           },
         ];
@@ -1677,6 +1929,20 @@ export type Database = {
             referencedColumns: ['id'];
           },
           {
+            foreignKeyName: 'waste_schedules_tenant_id_fkey';
+            columns: ['tenant_id'];
+            isOneToOne: false;
+            referencedRelation: 'v_tenants';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'waste_schedules_tenant_id_zone_id_fkey';
+            columns: ['tenant_id', 'zone_id'];
+            isOneToOne: false;
+            referencedRelation: 'v_waste_zones';
+            referencedColumns: ['tenant_id', 'id'];
+          },
+          {
             foreignKeyName: 'waste_schedules_tenant_id_zone_id_fkey';
             columns: ['tenant_id', 'zone_id'];
             isOneToOne: false;
@@ -1718,15 +1984,526 @@ export type Database = {
             referencedRelation: 'tenants';
             referencedColumns: ['id'];
           },
+          {
+            foreignKeyName: 'waste_zones_tenant_id_fkey';
+            columns: ['tenant_id'];
+            isOneToOne: false;
+            referencedRelation: 'v_tenants';
+            referencedColumns: ['id'];
+          },
         ];
       };
     };
     Views: {
-      [_ in never]: never;
+      v_districts: {
+        Row: {
+          color: string | null;
+          created_at: string | null;
+          geom: unknown;
+          geom_geo: Json | null;
+          id: string | null;
+          name: string | null;
+          tenant_id: string | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          color?: string | null;
+          created_at?: string | null;
+          geom?: unknown;
+          geom_geo?: never;
+          id?: string | null;
+          name?: string | null;
+          tenant_id?: string | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          color?: string | null;
+          created_at?: string | null;
+          geom?: unknown;
+          geom_geo?: never;
+          id?: string | null;
+          name?: string | null;
+          tenant_id?: string | null;
+          updated_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'districts_tenant_id_fkey';
+            columns: ['tenant_id'];
+            isOneToOne: false;
+            referencedRelation: 'tenants';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'districts_tenant_id_fkey';
+            columns: ['tenant_id'];
+            isOneToOne: false;
+            referencedRelation: 'v_tenants';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      v_events: {
+        Row: {
+          accessible: boolean | null;
+          all_day: boolean | null;
+          author_id: string | null;
+          category: Database['public']['Enums']['event_category'] | null;
+          cover_media_id: string | null;
+          created_at: string | null;
+          description: Json | null;
+          ends_at: string | null;
+          id: string | null;
+          location_label: string | null;
+          location_point: unknown;
+          location_point_geo: Json | null;
+          organizer: string | null;
+          place_id: string | null;
+          price: Json | null;
+          publish_at: string | null;
+          registration_url: string | null;
+          reviewer_id: string | null;
+          rrule: string | null;
+          starts_at: string | null;
+          status: Database['public']['Enums']['content_status'] | null;
+          tenant_id: string | null;
+          title: string | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          accessible?: boolean | null;
+          all_day?: boolean | null;
+          author_id?: string | null;
+          category?: Database['public']['Enums']['event_category'] | null;
+          cover_media_id?: string | null;
+          created_at?: string | null;
+          description?: Json | null;
+          ends_at?: string | null;
+          id?: string | null;
+          location_label?: string | null;
+          location_point?: unknown;
+          location_point_geo?: never;
+          organizer?: string | null;
+          place_id?: string | null;
+          price?: Json | null;
+          publish_at?: string | null;
+          registration_url?: string | null;
+          reviewer_id?: string | null;
+          rrule?: string | null;
+          starts_at?: string | null;
+          status?: Database['public']['Enums']['content_status'] | null;
+          tenant_id?: string | null;
+          title?: string | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          accessible?: boolean | null;
+          all_day?: boolean | null;
+          author_id?: string | null;
+          category?: Database['public']['Enums']['event_category'] | null;
+          cover_media_id?: string | null;
+          created_at?: string | null;
+          description?: Json | null;
+          ends_at?: string | null;
+          id?: string | null;
+          location_label?: string | null;
+          location_point?: unknown;
+          location_point_geo?: never;
+          organizer?: string | null;
+          place_id?: string | null;
+          price?: Json | null;
+          publish_at?: string | null;
+          registration_url?: string | null;
+          reviewer_id?: string | null;
+          rrule?: string | null;
+          starts_at?: string | null;
+          status?: Database['public']['Enums']['content_status'] | null;
+          tenant_id?: string | null;
+          title?: string | null;
+          updated_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'events_tenant_id_cover_media_id_fkey';
+            columns: ['tenant_id', 'cover_media_id'];
+            isOneToOne: false;
+            referencedRelation: 'media';
+            referencedColumns: ['tenant_id', 'id'];
+          },
+          {
+            foreignKeyName: 'events_tenant_id_fkey';
+            columns: ['tenant_id'];
+            isOneToOne: false;
+            referencedRelation: 'tenants';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'events_tenant_id_fkey';
+            columns: ['tenant_id'];
+            isOneToOne: false;
+            referencedRelation: 'v_tenants';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'events_tenant_id_place_id_fkey';
+            columns: ['tenant_id', 'place_id'];
+            isOneToOne: false;
+            referencedRelation: 'places';
+            referencedColumns: ['tenant_id', 'id'];
+          },
+          {
+            foreignKeyName: 'events_tenant_id_place_id_fkey';
+            columns: ['tenant_id', 'place_id'];
+            isOneToOne: false;
+            referencedRelation: 'v_places';
+            referencedColumns: ['tenant_id', 'id'];
+          },
+        ];
+      };
+      v_places: {
+        Row: {
+          accessibility: Json | null;
+          address: string | null;
+          category_id: string | null;
+          created_at: string | null;
+          description: string | null;
+          external_id: string | null;
+          id: string | null;
+          name: string | null;
+          opening_hours: string | null;
+          phone: string | null;
+          photo_media_id: string | null;
+          point: unknown;
+          point_geo: Json | null;
+          source: Database['public']['Enums']['place_source'] | null;
+          tenant_id: string | null;
+          updated_at: string | null;
+          website: string | null;
+        };
+        Insert: {
+          accessibility?: Json | null;
+          address?: string | null;
+          category_id?: string | null;
+          created_at?: string | null;
+          description?: string | null;
+          external_id?: string | null;
+          id?: string | null;
+          name?: string | null;
+          opening_hours?: string | null;
+          phone?: string | null;
+          photo_media_id?: string | null;
+          point?: unknown;
+          point_geo?: never;
+          source?: Database['public']['Enums']['place_source'] | null;
+          tenant_id?: string | null;
+          updated_at?: string | null;
+          website?: string | null;
+        };
+        Update: {
+          accessibility?: Json | null;
+          address?: string | null;
+          category_id?: string | null;
+          created_at?: string | null;
+          description?: string | null;
+          external_id?: string | null;
+          id?: string | null;
+          name?: string | null;
+          opening_hours?: string | null;
+          phone?: string | null;
+          photo_media_id?: string | null;
+          point?: unknown;
+          point_geo?: never;
+          source?: Database['public']['Enums']['place_source'] | null;
+          tenant_id?: string | null;
+          updated_at?: string | null;
+          website?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'places_tenant_id_category_id_fkey';
+            columns: ['tenant_id', 'category_id'];
+            isOneToOne: false;
+            referencedRelation: 'place_categories';
+            referencedColumns: ['tenant_id', 'id'];
+          },
+          {
+            foreignKeyName: 'places_tenant_id_fkey';
+            columns: ['tenant_id'];
+            isOneToOne: false;
+            referencedRelation: 'tenants';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'places_tenant_id_fkey';
+            columns: ['tenant_id'];
+            isOneToOne: false;
+            referencedRelation: 'v_tenants';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'places_tenant_id_photo_media_id_fkey';
+            columns: ['tenant_id', 'photo_media_id'];
+            isOneToOne: false;
+            referencedRelation: 'media';
+            referencedColumns: ['tenant_id', 'id'];
+          },
+        ];
+      };
+      v_reports: {
+        Row: {
+          address: string | null;
+          ai_suggestion: Json | null;
+          category_id: string | null;
+          client_request_id: string | null;
+          contact_email: string | null;
+          created_at: string | null;
+          description: string | null;
+          duplicate_of_id: string | null;
+          id: string | null;
+          photo_paths: string[] | null;
+          point: unknown;
+          point_geo: Json | null;
+          priority: Database['public']['Enums']['report_priority'] | null;
+          reference: string | null;
+          reporter_id: string | null;
+          resolved_at: string | null;
+          service_id: string | null;
+          status: Database['public']['Enums']['report_status'] | null;
+          tenant_id: string | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          address?: string | null;
+          ai_suggestion?: Json | null;
+          category_id?: string | null;
+          client_request_id?: string | null;
+          contact_email?: string | null;
+          created_at?: string | null;
+          description?: string | null;
+          duplicate_of_id?: string | null;
+          id?: string | null;
+          photo_paths?: never;
+          point?: unknown;
+          point_geo?: never;
+          priority?: Database['public']['Enums']['report_priority'] | null;
+          reference?: string | null;
+          reporter_id?: string | null;
+          resolved_at?: string | null;
+          service_id?: string | null;
+          status?: Database['public']['Enums']['report_status'] | null;
+          tenant_id?: string | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          address?: string | null;
+          ai_suggestion?: Json | null;
+          category_id?: string | null;
+          client_request_id?: string | null;
+          contact_email?: string | null;
+          created_at?: string | null;
+          description?: string | null;
+          duplicate_of_id?: string | null;
+          id?: string | null;
+          photo_paths?: never;
+          point?: unknown;
+          point_geo?: never;
+          priority?: Database['public']['Enums']['report_priority'] | null;
+          reference?: string | null;
+          reporter_id?: string | null;
+          resolved_at?: string | null;
+          service_id?: string | null;
+          status?: Database['public']['Enums']['report_status'] | null;
+          tenant_id?: string | null;
+          updated_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'reports_tenant_id_category_id_fkey';
+            columns: ['tenant_id', 'category_id'];
+            isOneToOne: false;
+            referencedRelation: 'report_categories';
+            referencedColumns: ['tenant_id', 'id'];
+          },
+          {
+            foreignKeyName: 'reports_tenant_id_duplicate_of_id_fkey';
+            columns: ['tenant_id', 'duplicate_of_id'];
+            isOneToOne: false;
+            referencedRelation: 'reports';
+            referencedColumns: ['tenant_id', 'id'];
+          },
+          {
+            foreignKeyName: 'reports_tenant_id_duplicate_of_id_fkey';
+            columns: ['tenant_id', 'duplicate_of_id'];
+            isOneToOne: false;
+            referencedRelation: 'v_reports';
+            referencedColumns: ['tenant_id', 'id'];
+          },
+          {
+            foreignKeyName: 'reports_tenant_id_fkey';
+            columns: ['tenant_id'];
+            isOneToOne: false;
+            referencedRelation: 'tenants';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'reports_tenant_id_fkey';
+            columns: ['tenant_id'];
+            isOneToOne: false;
+            referencedRelation: 'v_tenants';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'reports_tenant_id_service_id_fkey';
+            columns: ['tenant_id', 'service_id'];
+            isOneToOne: false;
+            referencedRelation: 'services';
+            referencedColumns: ['tenant_id', 'id'];
+          },
+        ];
+      };
+      v_tenants: {
+        Row: {
+          center: unknown;
+          center_geo: Json | null;
+          contour: unknown;
+          created_at: string | null;
+          id: string | null;
+          insee_code: string | null;
+          name: string | null;
+          parent_id: string | null;
+          plan: Database['public']['Enums']['tenant_plan'] | null;
+          population: number | null;
+          renewal_date: string | null;
+          settings: Json | null;
+          slug: string | null;
+          status: Database['public']['Enums']['tenant_status'] | null;
+          timezone: string | null;
+          type: Database['public']['Enums']['tenant_type'] | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          center?: unknown;
+          center_geo?: never;
+          contour?: unknown;
+          created_at?: string | null;
+          id?: string | null;
+          insee_code?: string | null;
+          name?: string | null;
+          parent_id?: string | null;
+          plan?: Database['public']['Enums']['tenant_plan'] | null;
+          population?: number | null;
+          renewal_date?: string | null;
+          settings?: Json | null;
+          slug?: string | null;
+          status?: Database['public']['Enums']['tenant_status'] | null;
+          timezone?: string | null;
+          type?: Database['public']['Enums']['tenant_type'] | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          center?: unknown;
+          center_geo?: never;
+          contour?: unknown;
+          created_at?: string | null;
+          id?: string | null;
+          insee_code?: string | null;
+          name?: string | null;
+          parent_id?: string | null;
+          plan?: Database['public']['Enums']['tenant_plan'] | null;
+          population?: number | null;
+          renewal_date?: string | null;
+          settings?: Json | null;
+          slug?: string | null;
+          status?: Database['public']['Enums']['tenant_status'] | null;
+          timezone?: string | null;
+          type?: Database['public']['Enums']['tenant_type'] | null;
+          updated_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'tenants_parent_id_fkey';
+            columns: ['parent_id'];
+            isOneToOne: false;
+            referencedRelation: 'tenants';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'tenants_parent_id_fkey';
+            columns: ['parent_id'];
+            isOneToOne: false;
+            referencedRelation: 'v_tenants';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      v_waste_zones: {
+        Row: {
+          created_at: string | null;
+          geom: unknown;
+          geom_geo: Json | null;
+          id: string | null;
+          name: string | null;
+          tenant_id: string | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          created_at?: string | null;
+          geom?: unknown;
+          geom_geo?: never;
+          id?: string | null;
+          name?: string | null;
+          tenant_id?: string | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          created_at?: string | null;
+          geom?: unknown;
+          geom_geo?: never;
+          id?: string | null;
+          name?: string | null;
+          tenant_id?: string | null;
+          updated_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'waste_zones_tenant_id_fkey';
+            columns: ['tenant_id'];
+            isOneToOne: false;
+            referencedRelation: 'tenants';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'waste_zones_tenant_id_fkey';
+            columns: ['tenant_id'];
+            isOneToOne: false;
+            referencedRelation: 'v_tenants';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
     };
     Functions: {
       accept_invitations: { Args: Record<PropertyKey, never>; Returns: number };
+      add_report_note: { Args: { p_id: string; p_message: string }; Returns: undefined };
+      assign_report: { Args: { p_id: string; p_service_id?: string }; Returns: undefined };
       can_manage_members: { Args: { p_tenant_id: string }; Returns: boolean };
+      create_tenant: {
+        Args: {
+          p_branding: Json;
+          p_identity: Json;
+          p_modules: Database['public']['Enums']['module_key'][];
+        };
+        Returns: string;
+      };
+      district_stats: {
+        Args: { p_tenant_id: string };
+        Returns: {
+          district_id: string;
+          reports: number;
+          subscribers: number;
+        }[];
+      };
+      estimate_audience: { Args: { p_target: Json; p_tenant_id: string }; Returns: number };
       record_invitation: {
         Args: {
           p_actor_id: string;
@@ -1738,6 +2515,25 @@ export type Database = {
         };
         Returns: string;
       };
+      record_platform_access: { Args: { p_tenant_id: string }; Returns: undefined };
+      reorder_procedures: { Args: { p_ids: string[]; p_tenant_id: string }; Returns: undefined };
+      report_ids_in_district: { Args: { p_district_id: string }; Returns: string[] };
+      report_stats: { Args: { p_tenant_id: string }; Returns: Json };
+      reports_nearby: {
+        Args: { p_radius_m: number; p_report_id: string };
+        Returns: {
+          distance_m: number;
+          report_id: string;
+        }[];
+      };
+      set_member_permissions: {
+        Args: {
+          p_membership_id: string;
+          p_permissions: Json;
+          p_role: Database['public']['Enums']['app_role'];
+        };
+        Returns: undefined;
+      };
       staff_last_sign_in: {
         Args: { p_tenant_id: string };
         Returns: {
@@ -1745,6 +2541,26 @@ export type Database = {
           last_sign_in_at: string;
           user_id: string;
         }[];
+      };
+      transition_content: {
+        Args: {
+          p_comment?: string;
+          p_entity: Database['public']['Enums']['reviewable_entity'];
+          p_id: string;
+          p_publish_at?: string;
+          p_to: Database['public']['Enums']['content_status'];
+        };
+        Returns: undefined;
+      };
+      update_report_status: {
+        Args: {
+          p_duplicate_of?: string;
+          p_id: string;
+          p_message?: string;
+          p_public?: boolean;
+          p_to: Database['public']['Enums']['report_status'];
+        };
+        Returns: undefined;
       };
     };
     Enums: {

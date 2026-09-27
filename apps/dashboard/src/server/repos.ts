@@ -3,6 +3,8 @@ import 'server-only';
 import type { Repositories } from '@app/data';
 import { createRepositories } from '@app/data';
 
+import { createSupabaseServerClient } from '@/lib/supabase/server';
+
 export type DataSourceName = 'mock' | 'supabase';
 
 export function getDataSource(): DataSourceName {
@@ -20,6 +22,7 @@ export function getRepos(): Repositories {
   cached ??=
     getDataSource() === 'mock'
       ? createRepositories({ source: 'mock', mock: { latencyMs: Number(process.env.MOCK_LATENCY_MS ?? '0') || 0 } })
-      : createRepositories({ source: 'supabase', client: null });
+      : // Client de la requete en cours (session dans les cookies) : la RLS s'applique a chaque appel.
+        createRepositories({ source: 'supabase', resolve: () => createSupabaseServerClient() });
   return cached;
 }

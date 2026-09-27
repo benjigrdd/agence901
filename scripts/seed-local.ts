@@ -7,6 +7,10 @@
 import { PERSONAS, USER_IDS } from '@app/data';
 import { createFixtures } from '@app/data/mock';
 import type { GeoMultiPolygon, GeoPoint } from '@app/shared';
+import { execFileSync } from 'node:child_process';
+import { crc32, deflateSync } from 'node:zlib';
+
+import { createClient } from '@supabase/supabase-js';
 import postgres from 'postgres';
 
 export const LOCAL_PASSWORD = 'Demo-Local-2026!';
@@ -49,6 +53,62 @@ function insert(table: string, rows: Record<string, Value | Raw>[]): string {
 }
 
 const stamps = (r: { createdAt: string; updatedAt: string }) => ({ created_at: r.createdAt, updated_at: r.updatedAt });
+
+/** Cle service LOCALE lue depuis la CLI (jamais ecrite dans le code). */
+function localStatus(): { apiUrl: string; serviceKey: string } {
+  const raw = execFileSync('pnpm', ['exec', 'supabase', 'status', '-o', 'json'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+  const json: unknown = JSON.parse(raw.slice(raw.indexOf('{')));
+  const get = (key: string) => (json && typeof json === 'object' && key in json ? String(Reflect.get(json, key)) : '');
+  return { apiUrl: get('API_URL'), serviceKey: get('SERVICE_ROLE_KEY') };
+}
+
+function dataUrlBytes(dataUrl: string): { bytes: Uint8Array; mime: string } {
+  const match = /^data:([^;,]+)((?:;[^;,]*)*),(.*)$/s.exec(dataUrl);
+  const mime = match?.[1] ?? 'application/octet-stream';
+  const payload = match?.[3] ?? '';
+  const base64 = (match?.[2] ?? '').includes(';base64');
+  return { mime, bytes: base64 ? Buffer.from(payload, 'base64') : Buffer.from(decodeURIComponent(payload)) };
+}
+
+/** Photo de demonstration (PNG gris uni) : le bucket des photos refuse le SVG (risque de script). */
+function demoPhotoPng(size = 64): Buffer {
+  const chunk = (type: string, body: Buffer) => {
+    const head = Buffer.alloc(4);
+    head.writeUInt32BE(body.length);
+    const typed = Buffer.concat([Buffer.from(type, 'ascii'), body]);
+    const crc = Buffer.alloc(4);
+    crc.writeUInt32BE(crc32(typed));
+    return Buffer.concat([head, typed, crc]);
+  };
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(size, 0);
+  ihdr.writeUInt32BE(size, 4);
+  ihdr.set([8, 2, 0, 0, 0], 8);
+  const row = Buffer.concat([Buffer.from([0]), Buffer.alloc(size * 3, 0x9a)]);
+  const pixels = deflateSync(Buffer.concat(Array.from({ length: size }, () => row)));
+  return Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), chunk('IHDR', ihdr), chunk('IDAT', pixels), chunk('IEND', Buffer.alloc(0))]);
+}
+const DEMO_PHOTO_PNG = demoPhotoPng();
+
+/** Fichiers de demonstration (mediatheque, photos de signalement) deposes dans Storage. */
+async function uploadFixtureFiles(data: ReturnType<typeof createFixtures>): Promise<number> {
+  const { apiUrl, serviceKey } = localStatus();
+  if (!/^https?:\/\/(127\.0\.0\.1|localhost)(:\d+)?$/.test(apiUrl) || !serviceKey) throw new Error('Supabase local introuvable (pnpm db:start)');
+  const admin = createClient(apiUrl, serviceKey, { auth: { persistSession: false } });
+  let count = 0;
+  for (const media of data.media) {
+    const { bytes, mime } = dataUrlBytes(media.url);
+    const { error } = await admin.storage.from('public-media').upload(media.path, bytes, { contentType: mime, upsert: true });
+    if (!error) count++;
+  }
+  for (const report of data.reports) {
+    for (const k of report.photos.keys()) {
+      const { error } = await admin.storage.from('report-photos').upload(`${report.tenantId}/${report.id}/photo-${k + 1}.png`, DEMO_PHOTO_PNG, { contentType: 'image/png', upsert: true });
+      if (!error) count++;
+    }
+  }
+  return count;
+}
 
 async function main() {
   const now = new Date();
@@ -143,7 +203,7 @@ async function main() {
     insert('public.report_categories', data.reportCategories.map((c) => ({ id: c.id, tenant_id: c.tenantId, label: c.label, icon: c.icon, default_service_id: c.defaultServiceId, sla_days: c.slaDays, ...stamps(c) }))),
     // Les doublons referencent un original : on insere d'abord les originaux.
     insert('public.reports', [...data.reports].sort((a, b) => Number(a.duplicateOfId !== null) - Number(b.duplicateOfId !== null)).map((r) => ({ id: r.id, tenant_id: r.tenantId, reference: r.reference, category_id: r.categoryId, description: r.description, point: point(r.point), address: r.address, status: r.status, priority: r.priority, service_id: r.serviceId, duplicate_of_id: r.duplicateOfId, reporter_id: r.reporterId, contact_email: r.contactEmail, ai_suggestion: r.aiSuggestion, resolved_at: r.resolvedAt, ...stamps(r) }))),
-    insert('public.report_media', data.reports.flatMap((r) => r.photos.map((_, k) => ({ tenant_id: r.tenantId, report_id: r.id, path: `${r.tenantId}/${r.id}/photo-${k + 1}.svg`, width: 1200, height: 800 })))),
+    insert('public.report_media', data.reports.flatMap((r) => r.photos.map((_, k) => ({ tenant_id: r.tenantId, report_id: r.id, path: `${r.tenantId}/${r.id}/photo-${k + 1}.png`, width: 64, height: 64 })))),
     insert('public.report_events', data.reportEvents.map((e) => ({ id: e.id, tenant_id: e.tenantId, report_id: e.reportId, kind: e.kind, from_status: e.fromStatus, to_status: e.toStatus, message: e.message, visibility: e.visibility, author_id: e.authorId, ...stamps(e) }))),
     insert('public.notifications', data.notifications.map((n) => ({ id: n.id, tenant_id: n.tenantId, title: n.title, body: n.body, target: n.target, linked_entity: n.linkedEntity, scheduled_at: n.scheduledAt, sent_at: n.sentAt, status: n.sentAt ? 'sent' : 'scheduled', stats: n.stats, urgent: n.urgent, justification: n.justification, author_id: n.authorId, ...stamps(n) }))),
     insert('public.audit_log', data.audit.map((a) => ({ id: a.id, tenant_id: a.tenantId, actor_id: a.actorId, action: a.action, entity: a.entity, entity_id: a.entityId, diff: a.diff, at: a.at }))),
@@ -159,6 +219,8 @@ async function main() {
     for (const statement of statements.filter(Boolean)) await tx.unsafe(statement);
   });
   const [{ count }] = await sql<{ count: string }[]>`select count(*)::text as count from public.reports`;
+  const files = await uploadFixtureFiles(data);
+  console.log(`Fichiers deposes dans Storage : ${files}`);
   console.log(`Seed local termine : ${data.tenants.length} communes, ${authUsers.length} comptes, ${count} signalements. Mot de passe des personas : ${LOCAL_PASSWORD}, secret TOTP : ${LOCAL_TOTP_SECRET}`);
   await sql.end();
 }

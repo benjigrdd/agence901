@@ -58,3 +58,6 @@ jobs:
 
       # Le seed de demonstration doit passer sur une base vierge.
       - run: pnpm db:seed
+
+      # Meme suite de contrat que le mock, sur Supabase (apres le seed).
+      - run: SUPABASE_CONTRACT=1 pnpm --filter @app/data exec vitest run src/supabase
