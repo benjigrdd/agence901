@@ -8,6 +8,7 @@ import type { FormEvent } from 'react';
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
 
+import { CsvImportDialog } from '@/components/csv-import/csv-import-dialog';
 import { SortableList } from '@/components/sortable-list';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -92,7 +93,10 @@ export function ProceduresManager({ slug, canEdit, procedures }: { slug: string;
               </li>
             ))}
           </ul>
-          <Button onClick={() => setDraft({ id: null, category: 'other', title: '', description: '', kind: 'link', value: '' })}>Nouvelle démarche</Button>
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={() => setDraft({ id: null, category: 'other', title: '', description: '', kind: 'link', value: '' })}>Nouvelle démarche</Button>
+            <CsvImportDialog slug={slug} entity="procedures" />
+          </div>
         </section>
       ) : null}
 

@@ -1,9 +1,11 @@
 'use server';
 
+import type { ImportResult, OsmPreview } from '@app/data';
 import { ValidationError } from '@app/data';
 import type { PlaceCategoryInput, PlaceInput } from '@app/shared';
-import { PlaceCategoryInputSchema, PlaceInputSchema } from '@app/shared';
+import { OSM_CATEGORY_KEYS, PlaceCategoryInputSchema, PlaceInputSchema } from '@app/shared';
 import { revalidatePath } from 'next/cache';
+import { z } from 'zod';
 
 import type { ActionResult } from '@/server/errors';
 import { runAction, toActionError } from '@/server/errors';
@@ -50,5 +52,47 @@ export async function removePlaceCategoryAction(slug: string, id: string): Promi
     await getRepos().placeCategories.remove(ctx, id);
     revalidatePath(`/${slug}/carte/categories`);
     return null;
+  });
+}
+
+const OsmCategoriesSchema = z
+  .array(z.string().refine((key) => OSM_CATEGORY_KEYS.includes(key), 'Catégorie inconnue'))
+  .min(1, 'Choisissez au moins une catégorie');
+
+export type OsmPreviewResult = ActionResult<OsmPreview>;
+export type OpenDataActionResult = ActionResult<ImportResult>;
+
+export async function previewOsmAction(
+  slug: string,
+  categories: string[],
+): Promise<OsmPreviewResult> {
+  return runAction(async () => {
+    const { ctx } = await requireTenant(slug);
+    return getRepos().openData.previewOsm(ctx, OsmCategoriesSchema.parse(categories));
+  });
+}
+
+export async function importOsmAction(
+  slug: string,
+  categories: string[],
+  previewId: string | null,
+): Promise<OpenDataActionResult> {
+  return runAction(async () => {
+    const { ctx } = await requireTenant(slug);
+    const result = await getRepos().openData.importOsm(ctx, {
+      categories: OsmCategoriesSchema.parse(categories),
+      previewId: z.uuid().nullable().parse(previewId),
+    });
+    revalidatePath(`/${slug}/carte`);
+    return result;
+  });
+}
+
+export async function importIrveAction(slug: string): Promise<OpenDataActionResult> {
+  return runAction(async () => {
+    const { ctx } = await requireTenant(slug);
+    const result = await getRepos().openData.importIrve(ctx);
+    revalidatePath(`/${slug}/carte`);
+    return result;
   });
 }

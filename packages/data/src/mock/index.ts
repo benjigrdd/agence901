@@ -5,6 +5,7 @@ import type { EventFilters, PostFilters, Repositories } from '../ports';
 import { createFixtures, validateFixtures } from './fixtures';
 import { createAuditRepositories } from './repos/audit-usage';
 import { createCitizenRepository } from './repos/citizen';
+import { createOpenDataRepository } from './repos/open-data';
 import { createContentRepository } from './repos/content';
 import { createMediaRepository } from './repos/media';
 import { createMembersRepository, permissionsOf } from './repos/members';
@@ -120,6 +121,7 @@ export function createMockEnvironment(options: MockOptions = {}): MockEnvironmen
     notifications: createNotificationsRepository(rt),
     ...createAuditRepositories(rt),
     citizen: createCitizenRepository(rt),
+    openData: createOpenDataRepository(rt),
   };
 
   const sessionForUser = (userId: string, aal: AalLevel): Session | null => {

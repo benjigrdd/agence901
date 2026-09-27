@@ -197,6 +197,8 @@ export const toPlace = (r: ViewRow<'v_places'>): Place =>
       photoMediaId: r.photo_media_id,
       source: r.source,
       externalId: r.external_id,
+      detached: r.detached,
+      attributes: r.attributes,
     },
     'lieu',
   );
@@ -279,7 +281,8 @@ export const toAuditEntry = (r: Row<'audit_log'>): AuditEntry =>
       actorId: r.actor_id ?? '00000000-0000-4000-8000-000000000000',
       action: r.action,
       entity: AUDIT_ENTITY_NAMES[r.entity] ?? r.entity,
-      entityId: r.entity_id,
+      // Actions sans element precis (acces editeur, export) : rattachees a la commune.
+      entityId: r.entity_id ?? r.tenant_id,
       diff: r.diff,
       at: iso(r.at),
     },

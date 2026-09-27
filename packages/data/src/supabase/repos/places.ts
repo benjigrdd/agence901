@@ -28,6 +28,8 @@ export function createPlacesRepository(resolve: ClientResolver): PlacesRepositor
     photo_media_id: p.photoMediaId,
     source: p.source,
     external_id: p.externalId,
+    detached: p.detached,
+    attributes: p.attributes,
   });
 
   return {

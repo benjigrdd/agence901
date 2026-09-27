@@ -166,6 +166,14 @@ export const PLACE_SOURCE_LABELS: Record<PlaceSource, string> = {
   csv: 'CSV',
 };
 
+/** Mention de licence obligatoire des lieux importes (ODbL pour OpenStreetMap, Licence Ouverte pour l'IRVE). */
+export const PLACE_SOURCE_ATTRIBUTIONS: Record<PlaceSource, string | null> = {
+  manual: null,
+  osm: '© contributeurs OpenStreetMap (ODbL)',
+  irve: 'Source : Base nationale des IRVE, data.gouv.fr (Licence Ouverte)',
+  csv: null,
+};
+
 export const WHEELCHAIR_ACCESS_LABELS: Record<WheelchairAccess, string> = {
   yes: 'Accessible',
   limited: 'Partiellement accessible',
@@ -197,6 +205,10 @@ export const AUDIT_ACTION_LABELS: Record<AuditAction, string> = {
   reorder: 'Réorganisation',
   send: 'Envoi',
   platform_access: 'Accès éditeur',
+  import_osm: 'Import OpenStreetMap',
+  import_irve: 'Import des bornes de recharge',
+  import_csv: 'Import CSV',
+  tenant_exported: 'Export des données',
 };
 
 export const STORE_PUBLICATION_STATUS_LABELS: Record<StorePublicationStatus, string> = {

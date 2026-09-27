@@ -6,6 +6,7 @@ import type {
   CollectionOccurrence,
   ContentReview,
   ContentStatus,
+  CsvImportEntity,
   District,
   DistrictInput,
   Event,
@@ -345,6 +346,51 @@ export interface CitizenRepository {
   publicFeed(ctx: DataContext): Promise<PublicFeed>;
 }
 
+// ---------------------------------------------------------------------------
+// Open data et reversibilite
+// ---------------------------------------------------------------------------
+
+export type ImportCounts = { created: number; updated: number; skipped: number };
+export type ImportResult = ImportCounts & {
+  found: number;
+  byCategory: Record<string, ImportCounts>;
+};
+export type OsmPreview = {
+  found: number;
+  byCategory: Record<string, number>;
+  previewId: string | null;
+};
+export type ExportResult = {
+  url: string;
+  expiresInSeconds: number;
+  counts: Record<string, number>;
+  includePersonalData: boolean;
+};
+export type GeometrySyncResult = { contour: boolean; population: number | null };
+export type CsvImportCounts = { created: number; updated: number; errors: number };
+
+export interface OpenDataRepository {
+  /** Apercu OpenStreetMap : nombre de lieux par categorie, sans ecriture (droit `map` en edition). */
+  previewOsm(ctx: DataContext, categories: readonly string[]): Promise<OsmPreview>;
+  /** Import OpenStreetMap par categories ; `previewId` reutilise le resultat d'un apercu recent. */
+  importOsm(
+    ctx: DataContext,
+    options: { categories: readonly string[]; previewId?: string | null },
+  ): Promise<ImportResult>;
+  /** Bornes de recharge du jeu national IRVE (droit `map` en edition). */
+  importIrve(ctx: DataContext): Promise<ImportResult>;
+  /** Export ZIP de toutes les donnees de la commune (admin ou editeur, 2FA), lien valable 24 h. */
+  exportTenant(ctx: DataContext, options: { includePersonalData: boolean }): Promise<ExportResult>;
+  /** Contour, centre et population officiels (geo.api.gouv.fr), editeur uniquement. */
+  syncGeometry(ctx: DataContext): Promise<GeometrySyncResult>;
+  /** Bilan d'un import CSV dans le journal d'audit (droit d'edition du module concerne). */
+  recordCsvImport(
+    ctx: DataContext,
+    entity: CsvImportEntity,
+    counts: CsvImportCounts,
+  ): Promise<void>;
+}
+
 export interface Repositories {
   tenants: TenantsRepository;
   branding: BrandingRepository;
@@ -368,4 +414,5 @@ export interface Repositories {
   audit: AuditRepository;
   usage: UsageRepository;
   citizen: CitizenRepository;
+  openData: OpenDataRepository;
 }

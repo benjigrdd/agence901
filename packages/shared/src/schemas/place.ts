@@ -19,6 +19,15 @@ export const PlaceAccessibilitySchema = z.object({
 });
 export type PlaceAccessibility = z.infer<typeof PlaceAccessibilitySchema>;
 
+/** Informations complementaires issues des imports (sous-type OSM, points de charge IRVE…). */
+export const PlaceAttributesSchema = z.object({
+  subtype: z.string().max(60).optional(),
+  chargePoints: z.number().int().min(0).optional(),
+  powersKw: z.array(z.number().min(0)).max(20).optional(),
+  operator: z.string().max(120).optional(),
+});
+export type PlaceAttributes = z.infer<typeof PlaceAttributesSchema>;
+
 export const PlaceSchema = z.object({
   ...baseEntityShape,
   categoryId: idSchema,
@@ -34,6 +43,9 @@ export const PlaceSchema = z.object({
   photoMediaId: idSchema.nullable(),
   source: enumSchema(PLACE_SOURCES),
   externalId: z.string().min(1).nullable(),
+  /** Lieu importe puis modifie a la main : les imports suivants ne l'ecrasent plus. */
+  detached: z.boolean(),
+  attributes: PlaceAttributesSchema,
 });
 export type Place = z.infer<typeof PlaceSchema>;
 

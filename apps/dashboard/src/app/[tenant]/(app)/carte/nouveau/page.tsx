@@ -37,6 +37,8 @@ export default async function NewPlacePage({ params }: PageProps<'/[tenant]/cart
           photoMediaId: null,
           source: 'manual',
           externalId: null,
+          detached: false,
+          attributes: {},
         }}
       />
     </>

@@ -6,6 +6,7 @@ défaut : chaque commune les valide avec son DPO (registre des traitements).
 | Donnée | Durée | Traitement |
 |---|---|---|
 | Journal d'audit | 12 mois | suppression |
+| Archives d'export de réversibilité (bucket `exports`) | 7 jours | suppression (Edge Function `purge-exports`) |
 | Livraisons de notifications | 90 jours | suppression |
 | File de suivi des signalements (envoyée) | 30 jours | suppression |
 | Jetons push invalides | 30 jours après invalidation | suppression |

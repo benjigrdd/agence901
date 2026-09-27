@@ -24,3 +24,20 @@ export async function saveAppSettingsAction(slug: string, links: AppLinks, homeL
     return null;
   });
 }
+
+/**
+ * Export de reversibilite : lien de telechargement du ZIP (24 h). Les donnees personnelles des
+ * habitants ne sont incluses que sur demande expresse d'un administrateur de la commune.
+ */
+export async function exportTenantAction(
+  slug: string,
+  includePersonalData: boolean,
+): Promise<ActionResult<{ url: string; expiresInSeconds: number }>> {
+  return runAction(async () => {
+    const { ctx } = await requireTenant(slug);
+    const { url, expiresInSeconds } = await getRepos().openData.exportTenant(ctx, {
+      includePersonalData: includePersonalData === true,
+    });
+    return { url, expiresInSeconds };
+  });
+}

@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { requirePermission } from '@/server/guards';
 import { getRepos } from '@/server/repos';
 
+import { OpenDataActions } from './open-data-actions';
 import { PlacesMap } from './places-map';
 import type { PlaceRow } from './places-table';
 import { PlacesTable } from './places-table';
@@ -61,6 +62,12 @@ export default async function PlacesPage({ params, searchParams }: PageProps<'/[
                 Catégories
               </Link>
             </Button>
+            {canEdit ? (
+              <OpenDataActions
+                slug={slug}
+                categories={categories.map((c) => ({ id: c.id, key: c.key, label: c.label }))}
+              />
+            ) : null}
             {canEdit ? (
               <Button asChild>
                 <Link href={`${base}/nouveau`}>

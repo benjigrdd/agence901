@@ -17,6 +17,7 @@ import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
 
+import { CsvImportDialog } from '@/components/csv-import/csv-import-dialog';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -110,12 +111,15 @@ export default async function AgendaPage({ params, searchParams }: PageProps<'/[
           <>
             <ViewToggle current={view} listHref={withParams({ vue: 'liste', mois: undefined })} calendarHref={withParams({ vue: 'calendrier', mois: month })} />
             {can(session, tenant.id, 'events', 'edit') ? (
-              <Button asChild>
-                <Link href={`${base}/nouveau`}>
-                  <Plus aria-hidden="true" />
-                  Nouvel événement
-                </Link>
-              </Button>
+              <>
+                <CsvImportDialog slug={slug} entity="events" />
+                <Button asChild>
+                  <Link href={`${base}/nouveau`}>
+                    <Plus aria-hidden="true" />
+                    Nouvel événement
+                  </Link>
+                </Button>
+              </>
             ) : null}
           </>
         }

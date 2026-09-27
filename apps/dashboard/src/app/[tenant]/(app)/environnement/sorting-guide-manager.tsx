@@ -3,12 +3,12 @@
 import type { SortingBin } from '@app/shared';
 import { SORTING_BIN_LABELS, SORTING_BINS } from '@app/shared';
 import type { ColumnDef } from '@tanstack/react-table';
-import { Upload } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import type { FormEvent } from 'react';
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
 
+import { CsvImportDialog } from '@/components/csv-import/csv-import-dialog';
 import { DataTable } from '@/components/data-table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -86,13 +86,7 @@ export function SortingGuideManager({ slug, canEdit, items }: { slug: string; ca
       {canEdit ? (
         <div className="flex flex-wrap gap-2">
           <Button onClick={() => setDraft({ id: null, name: '', bin: 'recycling', advice: '' })}>Ajouter une consigne</Button>
-          <Button variant="outline" disabled aria-describedby="import-bientot">
-            <Upload aria-hidden="true" />
-            Importer un CSV
-          </Button>
-          <span id="import-bientot" className="text-muted-foreground self-center text-sm">
-            Bientôt disponible
-          </span>
+          <CsvImportDialog slug={slug} entity="sortingGuide" />
         </div>
       ) : null}
       {draft ? (

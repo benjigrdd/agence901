@@ -3,6 +3,8 @@ import 'server-only';
 import type { GeoPoint } from '@app/shared';
 import { z } from 'zod';
 
+import { geocodeRequestCsv, parseGeocodeResponse } from '@/lib/geocode-csv';
+
 /** API Adresse de la Geoplateforme (IGN) : gratuite, sans cle. */
 const BASE_URL = 'https://data.geopf.fr/geocodage';
 
@@ -46,4 +48,35 @@ export async function searchAddress(text: string, inseeCode: string | null): Pro
 export async function reverseGeocode(point: GeoPoint): Promise<GeocodeResult | null> {
   const [first] = await query('reverse', { lat: String(point.lat), lon: String(point.lng), limit: '1', index: 'address' });
   return first ?? null;
+}
+
+/**
+ * Geocodage en masse (import CSV) : API Adresse en mode CSV, une requete pour tout le lot, restreinte
+ * a la commune. Renvoie la position par identifiant, `null` si l'adresse n'est pas trouvee (score < 0,6).
+ */
+export async function geocodeBatch(
+  items: readonly { id: string; address: string }[],
+  inseeCode: string,
+): Promise<Map<string, GeoPoint | null>> {
+  if (items.length === 0) return new Map();
+  const form = new FormData();
+  form.append(
+    'data',
+    new Blob([geocodeRequestCsv(items, inseeCode)], { type: 'text/csv' }),
+    'adresses.csv',
+  );
+  form.append('columns', 'adresse');
+  form.append('citycode', 'citycode');
+  form.append('indexes', 'address');
+  try {
+    const response = await fetch(`${process.env.GEOCODER_URL ?? BASE_URL}/search/csv`, {
+      method: 'POST',
+      body: form,
+      signal: AbortSignal.timeout(30_000),
+    });
+    if (!response.ok) return new Map();
+    return parseGeocodeResponse(await response.text());
+  } catch {
+    return new Map();
+  }
 }

@@ -47,6 +47,8 @@ const samplePlaceInput = (categoryId: string): PlaceInput => ({
   photoMediaId: null,
   source: 'manual',
   externalId: null,
+  detached: false,
+  attributes: {},
 });
 
 const PNG_DATA_URL = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';

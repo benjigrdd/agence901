@@ -124,3 +124,15 @@ personas. Les listes sont filtrées, triées et paginées côté adaptateur, com
 commune de moins de 50 000 habitants) ; les calculs géographiques et les indicateurs passent par des RPC
 PostGIS. Chaque ligne lue est validée par zod : une dérive du schéma échoue immédiatement.
 
+## ADR-016 — Imports open data et réversibilité (lot 17)
+
+Les imports open data s'exécutent dans des Edge Functions : droits vérifiés avec le jeton de l'appelant,
+écriture par une RPC réservée à la clé service qui fait l'upsert sur (commune, source, identifiant
+externe) et respecte les lieux détachés. La correspondance OSM vit dans `@app/shared` (testée) et une
+copie sans dépendance est générée pour Deno, vérifiée par un test de parité. Pour l'IRVE, on filtre le
+fichier national côté data.gouv.fr (API tabulaire, ressource trouvée dynamiquement) plutôt que de le lire
+en flux : ~150 Mo dépassent le budget CPU d'une Edge Function. Les imports CSV passent par les écritures
+habituelles du dashboard (RLS, audit ligne à ligne) avec une validation zod partagée navigateur/serveur ;
+seul leur bilan est inscrit à part. L'export de réversibilité exclut par défaut les données personnelles
+des habitants ; seul un administrateur de la commune peut les inclure, jamais l'éditeur. Les archives
+sont supprimées par l'API Storage (une suppression SQL laisserait des fichiers orphelins).

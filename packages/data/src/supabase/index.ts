@@ -6,6 +6,7 @@ import { createEventsRepository, createPostsRepository } from './repos/content';
 import { createMediaRepository } from './repos/media';
 import { createMembersRepository } from './repos/members';
 import { createNotificationsRepository } from './repos/notifications';
+import { createOpenDataRepository } from './repos/open-data';
 import { createPlacesRepository } from './repos/places';
 import { createReportsRepository } from './repos/reports';
 import { createTenancyRepositories } from './repos/tenancy';
@@ -39,5 +40,6 @@ export function createSupabaseRepositories(resolve: ClientResolver): Repositorie
     notifications: createNotificationsRepository(resolve),
     ...createAuditRepositories(resolve),
     citizen: createCitizenRepository(resolve),
+    openData: createOpenDataRepository(resolve),
   };
 }

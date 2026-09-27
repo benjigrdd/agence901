@@ -150,6 +150,10 @@ export const AUDIT_ACTIONS = [
   'reorder',
   'send',
   'platform_access',
+  'import_osm',
+  'import_irve',
+  'import_csv',
+  'tenant_exported',
 ] as const;
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];
 

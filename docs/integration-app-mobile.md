@@ -67,7 +67,12 @@ publiés et en ligne, lieux, catégories, démarches, consignes de tri, zones et
 quartiers, thèmes, catégories de signalement, marque, modules, configuration de l'accueil.
 Une commune suspendue ne renvoie plus rien : afficher un message neutre.
 
+**Mention de licence obligatoire** (lot 17) : la fiche d'un lieu importé affiche
+`PLACE_SOURCE_ATTRIBUTIONS[place.source]` de `@app/shared` — « © contributeurs OpenStreetMap (ODbL) »
+pour `osm`, la source data.gouv.fr (Licence Ouverte) pour `irve`. `place.attributes` porte le
+sous-type (`aire-de-jeux`), le nombre de points de charge, les puissances et l'opérateur des bornes.
+
 ## 7. Vérification
 
-`SUPABASE_CONTRACT=1 pnpm --filter @app/data exec vitest run src/supabase` rejoue le parcours complet
+`SUPABASE_CONTRACT=1 pnpm --filter @app/data exec vitest run --no-file-parallelism src/supabase` rejoue le parcours complet
 d'un habitant avec une vraie session anonyme (`citizen-flow.test.ts`).

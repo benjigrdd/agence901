@@ -16,7 +16,8 @@
 | 14 | Branchement du dashboard sur Supabase | Terminé |
 | 15 | Branchement de l'app mobile (côté plateforme) | Terminé (app à brancher : `docs/integration-app-mobile.md`) |
 | 16 | Tâches serveur (push, programmation, RGPD) | Terminé |
-| 17–19 | Voir `00-plan-et-mode-emploi.md` | À faire |
+| 17 | Imports open data, CSV et export de réversibilité | Terminé (mention ODbL dans l'app mobile : à faire avec ses écrans) |
+| 18–19 | Voir `00-plan-et-mode-emploi.md` | À faire |
 
 ## Lot 01 — Monorepo et conventions
 
@@ -246,3 +247,25 @@ L'app n'existe pas encore : tout ce dont elle aura besoin est prêt et testé c�
 - Tests : pgTAP 15 (temps simulé), envoi réel de l'Edge Function vers un faux service Expo.
 - Détail : `docs/taches-serveur.md`, `docs/rgpd/durees-de-conservation.md`.
 
+## Lot 17 — Imports open data, CSV et export de réversibilité
+
+- Migration `open_data` : `places.detached` et `places.attributes`, `tenant_contains` (contour, sinon
+  5 km autour du centre), `set_tenant_geometry`, upsert idempotent des imports (compteurs par catégorie,
+  une entrée d'audit par import), `record_csv_import`, `tenant_geojson`, purge des exports à 7 jours.
+  Actions d'audit `import_osm`, `import_irve`, `import_csv`, `tenant_exported`.
+- Edge Functions `sync-tenant-geometry`, `import-osm` (catégories, aperçu réutilisé, une requête
+  Overpass par commune toutes les 30 s), `import-irve` (ressource la plus récente via l'API data.gouv.fr,
+  filtrage par l'API tabulaire), `export-tenant` (README, JSON + CSV, GeoJSON, médias, option données
+  personnelles, lien 24 h), `purge-exports`.
+- `@app/shared` : `osm-mapping.ts` (copie Deno générée), `csv.ts` (papaparse, encodage), `csv-import.ts`
+  (4 entités, correspondance, validation ligne par ligne, modèles, rapport d'erreurs).
+- Dashboard : import CSV (Carte, Agenda, Démarches, Environnement) avec géocodage API Adresse en mode
+  CSV ; import OSM avec choix des catégories et aperçu ; import IRVE ; fiche lieu (détacher/rattacher,
+  mention de licence, points de charge) ; export dans Paramètres › Commune et la fiche super-admin ;
+  contour officiel à la création et depuis la fiche.
+- Tests : Vitest (shared, géocodage), Edge Functions sur Supabase local contre de faux services, pgTAP
+  `05_open_data`, Playwright import CSV Windows-1252.
+- Écarts : les Edge Functions sont testées par Vitest contre le runtime Supabase local plutôt que par
+  `deno test` (Deno absent du poste et de la CI ; couverture équivalente, sur le vrai runtime).
+  L'app mobile n'ayant pas encore d'écrans, la mention ODbL y est documentée
+  (`docs/integration-app-mobile.md`). Détail : `docs/imports.md`.

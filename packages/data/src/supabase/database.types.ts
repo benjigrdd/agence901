@@ -535,6 +535,7 @@ export type Database = {
           id: string;
           notification_id: string;
           push_token_id: string;
+          receipt_checked_at: string | null;
           status: string;
           tenant_id: string;
           ticket_id: string | null;
@@ -546,6 +547,7 @@ export type Database = {
           id?: string;
           notification_id: string;
           push_token_id: string;
+          receipt_checked_at?: string | null;
           status?: string;
           tenant_id: string;
           ticket_id?: string | null;
@@ -557,6 +559,7 @@ export type Database = {
           id?: string;
           notification_id?: string;
           push_token_id?: string;
+          receipt_checked_at?: string | null;
           status?: string;
           tenant_id?: string;
           ticket_id?: string | null;
@@ -595,11 +598,15 @@ export type Database = {
       };
       notifications: {
         Row: {
+          attempts: number;
           author_id: string;
           body: string;
+          channel: string;
           created_at: string;
+          dedupe_key: string | null;
           id: string;
           justification: string | null;
+          last_error: string | null;
           linked_entity: Json | null;
           scheduled_at: string | null;
           sent_at: string | null;
@@ -612,11 +619,15 @@ export type Database = {
           urgent: boolean;
         };
         Insert: {
+          attempts?: number;
           author_id: string;
           body: string;
+          channel?: string;
           created_at?: string;
+          dedupe_key?: string | null;
           id?: string;
           justification?: string | null;
+          last_error?: string | null;
           linked_entity?: Json | null;
           scheduled_at?: string | null;
           sent_at?: string | null;
@@ -629,11 +640,15 @@ export type Database = {
           urgent?: boolean;
         };
         Update: {
+          attempts?: number;
           author_id?: string;
           body?: string;
+          channel?: string;
           created_at?: string;
+          dedupe_key?: string | null;
           id?: string;
           justification?: string | null;
+          last_error?: string | null;
           linked_entity?: Json | null;
           scheduled_at?: string | null;
           sent_at?: string | null;
@@ -720,9 +735,11 @@ export type Database = {
         Row: {
           accessibility: NonNullable<Json>;
           address: string;
+          attributes: NonNullable<Json>;
           category_id: string;
           created_at: string;
           description: string | null;
+          detached: boolean;
           external_id: string | null;
           id: string;
           name: string;
@@ -738,9 +755,11 @@ export type Database = {
         Insert: {
           accessibility?: NonNullable<Json>;
           address: string;
+          attributes?: NonNullable<Json>;
           category_id: string;
           created_at?: string;
           description?: string | null;
+          detached?: boolean;
           external_id?: string | null;
           id?: string;
           name: string;
@@ -756,9 +775,11 @@ export type Database = {
         Update: {
           accessibility?: NonNullable<Json>;
           address?: string;
+          attributes?: NonNullable<Json>;
           category_id?: string;
           created_at?: string;
           description?: string | null;
+          detached?: boolean;
           external_id?: string | null;
           id?: string;
           name?: string;
@@ -2164,9 +2185,11 @@ export type Database = {
         Row: {
           accessibility: Json | null;
           address: string | null;
+          attributes: Json | null;
           category_id: string | null;
           created_at: string | null;
           description: string | null;
+          detached: boolean | null;
           external_id: string | null;
           id: string | null;
           name: string | null;
@@ -2183,9 +2206,11 @@ export type Database = {
         Insert: {
           accessibility?: Json | null;
           address?: string | null;
+          attributes?: Json | null;
           category_id?: string | null;
           created_at?: string | null;
           description?: string | null;
+          detached?: boolean | null;
           external_id?: string | null;
           id?: string | null;
           name?: string | null;
@@ -2202,9 +2227,11 @@ export type Database = {
         Update: {
           accessibility?: Json | null;
           address?: string | null;
+          attributes?: Json | null;
           category_id?: string | null;
           created_at?: string | null;
           description?: string | null;
+          detached?: boolean | null;
           external_id?: string | null;
           id?: string | null;
           name?: string | null;
@@ -2488,6 +2515,8 @@ export type Database = {
       anonymize_citizen: { Args: { p_user_id: string }; Returns: undefined };
       assign_report: { Args: { p_id: string; p_service_id?: string }; Returns: undefined };
       can_manage_members: { Args: { p_tenant_id: string }; Returns: boolean };
+      claim_due_notifications: { Args: { p_limit?: number; p_now?: string }; Returns: Json };
+      claim_outbox: { Args: { p_limit?: number }; Returns: Json };
       create_tenant: {
         Args: {
           p_branding: Json;
@@ -2505,6 +2534,27 @@ export type Database = {
         }[];
       };
       estimate_audience: { Args: { p_target: Json; p_tenant_id: string }; Returns: number };
+      has_module_permission: {
+        Args: {
+          p_level: Database['public']['Enums']['permission_level'];
+          p_module: Database['public']['Enums']['module_key'];
+          p_tenant_id: string;
+        };
+        Returns: boolean;
+      };
+      is_platform_admin: { Args: Record<PropertyKey, never>; Returns: boolean };
+      is_tenant_admin: { Args: { p_tenant_id: string }; Returns: boolean };
+      pending_receipts: {
+        Args: { p_limit?: number; p_now?: string };
+        Returns: {
+          delivery_id: string;
+          ticket_id: string;
+        }[];
+      };
+      record_csv_import: {
+        Args: { p_counts: Json; p_entity: string; p_tenant_id: string };
+        Returns: undefined;
+      };
       record_invitation: {
         Args: {
           p_actor_id: string;
@@ -2517,6 +2567,11 @@ export type Database = {
         Returns: string;
       };
       record_platform_access: { Args: { p_tenant_id: string }; Returns: undefined };
+      record_push_results: {
+        Args: { p_error?: string; p_notification_id: string; p_results: Json };
+        Returns: undefined;
+      };
+      record_receipts: { Args: { p_receipts: Json }; Returns: undefined };
       register_push_token: {
         Args: {
           p_locale?: string;
@@ -2543,6 +2598,16 @@ export type Database = {
         };
         Returns: undefined;
       };
+      set_tenant_geometry: {
+        Args: {
+          p_actor_id: string;
+          p_center: Json;
+          p_contour: Json;
+          p_population: number;
+          p_tenant_id: string;
+        };
+        Returns: undefined;
+      };
       staff_last_sign_in: {
         Args: { p_tenant_id: string };
         Returns: {
@@ -2551,6 +2616,11 @@ export type Database = {
           user_id: string;
         }[];
       };
+      tenant_contains: {
+        Args: { p_lat: number; p_lng: number; p_tenant_id: string };
+        Returns: boolean;
+      };
+      tenant_geojson: { Args: { p_tenant_id: string }; Returns: Json };
       touch_citizen: { Args: Record<PropertyKey, never>; Returns: undefined };
       transition_content: {
         Args: {
@@ -2572,6 +2642,22 @@ export type Database = {
         };
         Returns: undefined;
       };
+      upsert_imported_places: {
+        Args: {
+          p_actor_id: string;
+          p_rows: Json;
+          p_source: Database['public']['Enums']['place_source'];
+          p_tenant_id: string;
+        };
+        Returns: Json;
+      };
+      waste_reminder_recipients: {
+        Args: { p_zone_id: string };
+        Returns: {
+          push_token_id: string;
+          token: string;
+        }[];
+      };
     };
     Enums: {
       alert_level: 'info' | 'important' | 'urgent';
@@ -2588,7 +2674,11 @@ export type Database = {
         | 'upload'
         | 'reorder'
         | 'send'
-        | 'platform_access';
+        | 'platform_access'
+        | 'import_osm'
+        | 'import_irve'
+        | 'import_csv'
+        | 'tenant_exported';
       content_status: 'draft' | 'pending_review' | 'scheduled' | 'published' | 'archived';
       event_category: 'culture' | 'sport' | 'association' | 'municipal' | 'youth' | 'other';
       module_key:
@@ -2606,7 +2696,7 @@ export type Database = {
         | 'districts'
         | 'settings'
         | 'audit';
-      notification_status: 'scheduled' | 'sent' | 'failed' | 'cancelled';
+      notification_status: 'scheduled' | 'sending' | 'sent' | 'failed' | 'cancelled';
       permission_level: 'read' | 'edit' | 'publish';
       place_source: 'manual' | 'osm' | 'irve' | 'csv';
       post_type: 'news' | 'works' | 'decision' | 'alert';
@@ -2768,6 +2858,10 @@ export const Constants = {
         'reorder',
         'send',
         'platform_access',
+        'import_osm',
+        'import_irve',
+        'import_csv',
+        'tenant_exported',
       ],
       content_status: ['draft', 'pending_review', 'scheduled', 'published', 'archived'],
       event_category: ['culture', 'sport', 'association', 'municipal', 'youth', 'other'],
@@ -2787,7 +2881,7 @@ export const Constants = {
         'settings',
         'audit',
       ],
-      notification_status: ['scheduled', 'sent', 'failed', 'cancelled'],
+      notification_status: ['scheduled', 'sending', 'sent', 'failed', 'cancelled'],
       permission_level: ['read', 'edit', 'publish'],
       place_source: ['manual', 'osm', 'irve', 'csv'],
       post_type: ['news', 'works', 'decision', 'alert'],

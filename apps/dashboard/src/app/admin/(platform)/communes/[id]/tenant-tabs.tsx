@@ -28,7 +28,7 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import type { ActionResult } from '@/server/errors';
 
-import { setModuleAction, setTenantStatusAction, updateBrandingAction, updateStoreInfoAction, updateTenantAction } from '../actions';
+import { exportTenantAsPlatformAction, setModuleAction, setTenantStatusAction, syncGeometryAction, updateBrandingAction, updateStoreInfoAction, updateTenantAction } from '../actions';
 
 const SELECT = 'border-input bg-background h-9 w-full rounded-md border px-3 text-sm';
 
@@ -118,9 +118,37 @@ export function GeneralTab({ tenant }: { tenant: Tenant }) {
           <Textarea id="g-notes" maxLength={2000} value={v.internalNotes ?? ''} onChange={(e) => setV({ ...v, internalNotes: e.target.value })} />
         </Field>
       </div>
-      <div className="sm:col-span-2">
+      <div className="flex flex-wrap gap-2 sm:col-span-2">
         <Button type="submit" disabled={pending}>
           Enregistrer
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          disabled={pending}
+          onClick={() =>
+            run(async () => {
+              const r = await syncGeometryAction(tenant.id);
+              return r.ok ? { ok: true, data: null } : r;
+            }, 'Contour, centre et population mis à jour (geo.api.gouv.fr)')
+          }
+        >
+          Récupérer le contour officiel
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          disabled={pending}
+          onClick={() =>
+            run(async () => {
+              const r = await exportTenantAsPlatformAction(tenant.id);
+              if (!r.ok) return r;
+              window.location.assign(r.data.url);
+              return { ok: true, data: null };
+            }, 'Export prêt : téléchargement en cours (sans données personnelles)')
+          }
+        >
+          Exporter toutes les données
         </Button>
       </div>
     </form>

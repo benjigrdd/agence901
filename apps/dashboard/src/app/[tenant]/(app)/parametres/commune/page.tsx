@@ -1,4 +1,4 @@
-import { can, formatNumberFr, TENANT_TYPE_LABELS } from '@app/shared';
+import { can, formatNumberFr, isTenantAdmin, TENANT_TYPE_LABELS } from '@app/shared';
 import type { Metadata } from 'next';
 
 import { PageHeader } from '@/components/page-header';
@@ -6,6 +6,7 @@ import { requirePermission } from '@/server/guards';
 import { getRepos } from '@/server/repos';
 
 import { AppSettingsForm } from './app-settings-form';
+import { ExportButton } from './export-button';
 
 export const metadata: Metadata = { title: 'Commune' };
 
@@ -54,6 +55,14 @@ export default async function TenantSettingsPage({ params }: PageProps<'/[tenant
         homeLayout={config.homeLayout}
         branding={{ appName: branding.appName, primary: branding.colors.primary, onPrimary: branding.colors.onPrimary, background: branding.colors.background, text: branding.colors.text }}
       />
+      {isTenantAdmin(session, tenant.id) ? (
+        <ExportButton
+          slug={slug}
+          canIncludePersonalData={session.memberships.some(
+            (m) => m.tenantId === tenant.id && m.role === 'admin',
+          )}
+        />
+      ) : null}
     </>
   );
 }

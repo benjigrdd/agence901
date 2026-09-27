@@ -508,6 +508,11 @@ function buildTenant(data: MockData, def: TenantDef, now: Date): void {
             : source === 'osm'
               ? `node/${f.number.int({ min: 100_000_000, max: 9_000_000_000 })}`
               : null,
+        detached: false,
+        attributes:
+          source === 'irve'
+            ? { chargePoints: 2, powersKw: [22], operator: 'Opérateur de démonstration' }
+            : {},
       });
     }
   }

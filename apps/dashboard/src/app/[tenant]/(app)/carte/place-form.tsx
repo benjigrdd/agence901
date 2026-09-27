@@ -1,10 +1,11 @@
 'use client';
 
-import type { GeoPoint, PlaceInput, PlaceSource, WheelchairAccess } from '@app/shared';
+import type { GeoPoint, PlaceInput, WheelchairAccess } from '@app/shared';
 import {
   emptyWeeklyHours,
   openingHoursErrors,
   parseOpeningHours,
+  PLACE_SOURCE_ATTRIBUTIONS,
   PLACE_SOURCE_LABELS,
   serializeOpeningHours,
   WHEELCHAIR_ACCESS,
@@ -49,7 +50,10 @@ export function PlaceForm({ slug, placeId, initial, categories, photo, canEdit }
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [selectedPhoto, setSelectedPhoto] = useState(photo);
   const set = <K extends keyof PlaceInput>(key: K, value: PlaceInput[K]) => setValues((v) => ({ ...v, [key]: value }));
-  const imported = values.source !== 'manual';
+  // Lieu issu d'un import open data (OSM, IRVE) : mis a jour par les imports suivants tant qu'il n'est pas detache.
+  const imported = values.source === 'osm' || values.source === 'irve';
+  const attribution = PLACE_SOURCE_ATTRIBUTIONS[values.source];
+  const { chargePoints, powersKw, operator, subtype } = values.attributes;
 
   const movePin = (point: GeoPoint) => {
     set('point', point);
@@ -93,20 +97,35 @@ export function PlaceForm({ slug, placeId, initial, categories, photo, canEdit }
         <p className="inline-flex items-center gap-2 rounded-md border px-2 py-1 text-sm">
           Source : <strong>{PLACE_SOURCE_LABELS[values.source]}</strong>
         </p>
-        {imported ? (
+        {imported && !values.detached ? (
           <div role="note" className="flex flex-wrap items-center gap-3 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
             <TriangleAlert className="size-4" aria-hidden="true" />
-            <span>Ce lieu sera écrasé au prochain import sauf si vous le détachez.</span>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={() => setValues((v) => ({ ...v, source: 'manual' satisfies PlaceSource, externalId: null }))}
-            >
+            <span>Ce lieu sera mis à jour au prochain import, sauf si vous le détachez.</span>
+            <Button type="button" size="sm" variant="outline" onClick={() => setValues((v) => ({ ...v, detached: true }))}>
               Détacher de l’import
             </Button>
           </div>
         ) : null}
+        {imported && values.detached ? (
+          <div role="note" className="flex flex-wrap items-center gap-3 rounded-md border p-3 text-sm">
+            <span>Lieu détaché : les imports suivants ne le modifient plus.</span>
+            <Button type="button" size="sm" variant="outline" onClick={() => setValues((v) => ({ ...v, detached: false }))}>
+              Rattacher à l’import
+            </Button>
+          </div>
+        ) : null}
+        {chargePoints !== undefined || subtype || operator ? (
+          <ul className="text-muted-foreground list-inside list-disc text-sm" aria-label="Informations importées">
+            {subtype === 'aire-de-jeux' ? <li>Aire de jeux</li> : null}
+            {chargePoints !== undefined ? (
+              <li>
+                {chargePoints} point{chargePoints > 1 ? 's' : ''} de charge{powersKw?.length ? ` (${powersKw.join(', ')} kW)` : ''}
+              </li>
+            ) : null}
+            {operator ? <li>Opérateur : {operator}</li> : null}
+          </ul>
+        ) : null}
+        {attribution ? <p className="text-muted-foreground text-xs">{attribution}</p> : null}
         <FormField id="place-name" label="Nom" required {...field('name')}>
           {(p) => <Input {...p} value={values.name} maxLength={120} onChange={(e) => set('name', e.target.value)} />}
         </FormField>
