@@ -62,7 +62,7 @@ export const SQL_ENUMS: Record<string, readonly string[]> = {
   store_publication_status: STORE_PUBLICATION_STATUSES,
   push_platform: PUSH_PLATFORMS,
   // Propre a la base (pas de schema zod correspondant).
-  notification_status: ['scheduled', 'sent', 'failed', 'cancelled'],
+  notification_status: ['scheduled', 'sending', 'sent', 'failed', 'cancelled'],
 };
 
 const lit = (v: string) => `'${v.replace(/'/g, "''")}'`;

@@ -15,7 +15,8 @@
 | 13 | Auth du personnel, 2FA, invitations | Terminé |
 | 14 | Branchement du dashboard sur Supabase | Terminé |
 | 15 | Branchement de l'app mobile (côté plateforme) | Terminé (app à brancher : `docs/integration-app-mobile.md`) |
-| 16–19 | Voir `00-plan-et-mode-emploi.md` | À faire |
+| 16 | Tâches serveur (push, programmation, RGPD) | Terminé |
+| 17–19 | Voir `00-plan-et-mode-emploi.md` | À faire |
 
 ## Lot 01 — Monorepo et conventions
 
@@ -233,4 +234,15 @@ L'app n'existe pas encore : tout ce dont elle aura besoin est prêt et testé c�
   (`citizen-flow.test.ts` : session anonyme → photo → signalement vu par le personnel en URL signée →
   suppression ; invitation d'un agent via l'Edge Function `invite-member`).
 - Guide pour la future app : `docs/integration-app-mobile.md`.
+
+## Lot 16 — Tâches serveur
+
+- Migration `server_jobs` : publication/dépublication programmées, alerte → notification unique, résolution
+  des destinataires (cible + préférences), lots verrouillés (`skip locked`), résultats et accusés de
+  réception, file de suivi des signalements, destinataires des rappels de collecte, purge RGPD, agrégats
+  d'usage, `job_runs` ; planification `pg_cron` (appels HTTP via `pg_net` avec secrets Vault).
+- Edge Functions `dispatch-notifications` (Expo Push, lots de 100, accusés de réception) et
+  `send-waste-reminders` (récurrences et exceptions, erreurs journalisées), réservées à la clé service.
+- Tests : pgTAP 15 (temps simulé), envoi réel de l'Edge Function vers un faux service Expo.
+- Détail : `docs/taches-serveur.md`, `docs/rgpd/durees-de-conservation.md`.
 
