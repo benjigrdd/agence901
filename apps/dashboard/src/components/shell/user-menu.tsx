@@ -1,7 +1,9 @@
 'use client';
 
-import { CircleUser, LogOut } from 'lucide-react';
+import { CircleUser, LogOut, MonitorX, ShieldCheck } from 'lucide-react';
+import Link from 'next/link';
 
+import { signOutEverywhereAction } from '@/app/actions/auth';
 import { signOut } from '@/app/actions/session';
 import { Button } from '@/components/ui/button';
 import {
@@ -31,11 +33,26 @@ export function UserMenu({ displayName, roleLabel }: UserMenuProps) {
           <span className="text-muted-foreground block text-xs font-normal">{roleLabel}</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <Link href="/compte/securite">
+            <ShieldCheck aria-hidden="true" />
+            Sécurité du compte
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
         <form action={signOut}>
           <DropdownMenuItem asChild>
             <button type="submit" className="w-full">
               <LogOut aria-hidden="true" />
               Se déconnecter
+            </button>
+          </DropdownMenuItem>
+        </form>
+        <form action={signOutEverywhereAction}>
+          <DropdownMenuItem asChild>
+            <button type="submit" className="w-full">
+              <MonitorX aria-hidden="true" />
+              Se déconnecter de tous les appareils
             </button>
           </DropdownMenuItem>
         </form>

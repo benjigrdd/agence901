@@ -1,6 +1,8 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
+  // Build separe pour les tests E2E sur Supabase (NEXT_PUBLIC_* sont figees au build).
+  distDir: process.env.NEXT_DIST_DIR ?? '.next',
   transpilePackages: ['@app/shared', '@app/data'],
   experimental: {
     // Active `forbidden()` : vraie reponse 403 quand le niveau de droit est insuffisant.

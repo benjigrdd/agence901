@@ -10,6 +10,8 @@ import type { GeoMultiPolygon, GeoPoint } from '@app/shared';
 import postgres from 'postgres';
 
 export const LOCAL_PASSWORD = 'Demo-Local-2026!';
+/** Secret TOTP (base32) des personas en local : codes calculables par les tests et par une app d'authentification. */
+export const LOCAL_TOTP_SECRET = 'JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP';
 const DB_URL = process.env.SUPABASE_DB_URL ?? 'postgresql://postgres:postgres@127.0.0.1:54322/postgres';
 
 const host = new URL(DB_URL).hostname;
@@ -95,11 +97,26 @@ async function main() {
       updated_at: now.toISOString(),
     }));
 
+  // 2FA deja configuree pour les personas du personnel, sauf « Admin Alpha sans 2FA ».
+  const mfaFactors = Object.values(PERSONAS)
+    .filter((p) => p.kind === 'staff' && p.aal === 'aal2')
+    .map((p) => ({
+      id: p.userId.replace(/^.{8}/, 'f0f0f0f0'),
+      user_id: p.userId,
+      friendly_name: 'Démo locale',
+      factor_type: new Raw("'totp'::auth.factor_type"),
+      status: new Raw("'verified'::auth.factor_status"),
+      secret: LOCAL_TOTP_SECRET,
+      created_at: now.toISOString(),
+      updated_at: now.toISOString(),
+    }));
+
   const statements = [
     "set local app.skip_tenant_defaults = 'on';",
     "set local app.skip_audit = 'on';",
     insert('auth.users', authUsers),
     insert('auth.identities', identities),
+    insert('auth.mfa_factors', mfaFactors),
     insert('public.tenants', data.tenants.map((t) => ({ id: t.id, slug: t.slug, name: t.name, type: t.type, parent_id: t.parentId, insee_code: t.inseeCode, population: t.population, status: t.status, plan: t.plan, timezone: t.timezone, center: point(t.center), renewal_date: t.renewalDate, ...stamps(t) }))),
     insert('public.tenant_internal_notes', data.tenants.filter((t) => t.internalNotes).map((t) => ({ tenant_id: t.id, notes: t.internalNotes }))),
     insert('public.tenant_branding', data.branding.map((b) => ({ id: b.id, tenant_id: b.tenantId, app_name: b.appName, short_name: b.shortName, colors: b.colors, logo_url: b.logoUrl, icon_url: b.iconUrl, ...stamps(b) }))),
@@ -142,7 +159,7 @@ async function main() {
     for (const statement of statements.filter(Boolean)) await tx.unsafe(statement);
   });
   const [{ count }] = await sql<{ count: string }[]>`select count(*)::text as count from public.reports`;
-  console.log(`Seed local termine : ${data.tenants.length} communes, ${authUsers.length} comptes, ${count} signalements. Mot de passe des personas : ${LOCAL_PASSWORD}`);
+  console.log(`Seed local termine : ${data.tenants.length} communes, ${authUsers.length} comptes, ${count} signalements. Mot de passe des personas : ${LOCAL_PASSWORD}, secret TOTP : ${LOCAL_TOTP_SECRET}`);
   await sql.end();
 }
 

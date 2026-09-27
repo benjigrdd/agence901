@@ -20,6 +20,8 @@ export default defineConfig({
     command: `pnpm build && pnpm start --port ${PORT}`,
     url: `http://localhost:${PORT}/connexion`,
     reuseExistingServer: !process.env.CI,
+    // `pnpm start` ne relaie pas toujours SIGTERM a Next : arret explicite en fin de suite.
+    gracefulShutdown: { signal: 'SIGINT', timeout: 2000 },
     timeout: 300_000,
     env: { DATA_SOURCE: 'mock' },
   },

@@ -6,18 +6,25 @@ import { setMemberPersona, setPersona } from '@/app/actions/session';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { getProductName } from '@/lib/product-name';
+
+import { LoginForm } from './login-form';
 import { isMockDataSource } from '@/server/repos';
 import { invitedMembers } from '@/server/session';
 
 export const metadata: Metadata = { title: 'Connexion' };
 
 export default async function LoginPage({ searchParams }: PageProps<'/connexion'>) {
-  const { erreur } = await searchParams;
+  const { erreur, next } = await searchParams;
   const staff = PERSONA_KEYS.map((key) => PERSONAS[key]).filter((p) => p.kind === 'staff');
 
   return (
     <main id="contenu" className="mx-auto w-full max-w-4xl flex-1 p-6 sm:p-10">
       <h1 className="text-3xl font-semibold tracking-tight">Connexion à {getProductName()}</h1>
+      {erreur === 'lien' ? (
+        <p role="alert" className="mt-6 rounded-md border border-amber-300 bg-amber-50 p-4 text-amber-900">
+          Ce lien n’est plus valide. Recommencez la procédure.
+        </p>
+      ) : null}
       {erreur === '2fa' ? (
         <div role="alert" className="mt-6 flex items-start gap-3 rounded-md border border-amber-300 bg-amber-50 p-4 text-amber-900">
           <ShieldAlert className="mt-0.5 size-5 shrink-0" aria-hidden="true" />
@@ -80,7 +87,7 @@ export default async function LoginPage({ searchParams }: PageProps<'/connexion'
           ) : null}
         </>
       ) : (
-        <p className="text-muted-foreground mt-4">La connexion sécurisée sera disponible prochainement (lot 13).</p>
+        <LoginForm next={typeof next === 'string' && next.startsWith('/') ? next : '/'} />
       )}
     </main>
   );

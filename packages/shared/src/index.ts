@@ -5,6 +5,7 @@ export * from './geo';
 export * from './i18n/fr';
 export * from './notification-rules';
 export * from './opening-hours';
+export * from './password';
 export * from './permissions';
 export * from './procedures-catalog';
 export * from './product';

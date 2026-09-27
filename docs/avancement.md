@@ -12,7 +12,8 @@
 | 08–10 | App mobile | Reporté (l'app sera branchée après les lots 11–14) |
 | 11 | Supabase : schéma | Terminé |
 | 12 | RLS, stockage, tests d'isolation | Terminé |
-| 13–19 | Voir `00-plan-et-mode-emploi.md` | À faire |
+| 13 | Auth du personnel, 2FA, invitations | Terminé |
+| 14–19 | Voir `00-plan-et-mode-emploi.md` | À faire |
 
 ## Lot 01 — Monorepo et conventions
 
@@ -179,4 +180,20 @@
   éditeur ; stockage 8). Job CI `database` : génération à jour, lint, tests, seed.
 - Spec du lot relue partiellement (fichier iCloud indisponible pendant la session) : périmètre reconstitué
   depuis le début de la spec et les exigences des lots 13 et 14.
+
+## Lot 13 — Authentification du personnel, 2FA, invitations
+
+- `@supabase/ssr` : client serveur (cookies), client navigateur, `src/proxy.ts` (Next 16) qui rafraîchit la
+  session et impose la 2FA (`/connexion/2fa` ou `/connexion/2fa/configurer`). Mode mock inchangé.
+- Pages : connexion (message générique), code TOTP, configuration (QR code + clé en texte, conseil d'un second
+  appareil), mot de passe oublié → `/auth/confirm` → `/reinitialiser`, invitation (12 caractères, jauge de
+  robustesse), `/compte/securite` (appareils, changement de mot de passe) ; menu : déconnexion locale ou globale.
+- `getSession()` réel (même `Session` que le mock, sous RLS) ; `describeUser` lit le profil.
+- Invitations : Edge Function `invite-member` (vérifie l'appelant avec son jeton, puis `record_invitation`
+  avec la clé service côté Supabase) ; `accept_invitations()`, `can_manage_members()`, `staff_last_sign_in()`.
+- Seed : facteurs TOTP vérifiés pour les personas (secret local documenté), sauf « Admin Alpha sans 2FA ».
+- `scripts/set-platform-admin.ts` (rôle éditeur, clé service lue dans l'environnement de l'exploitant).
+- Tests : `@app/shared/password` (3), Playwright sur Supabase local `pnpm --filter dashboard test:e2e:supabase`
+  (5 : message générique, redirection sans session, mot de passe + TOTP → aal2, code faux, configuration obligatoire).
+- Détail : `docs/auth.md`.
 

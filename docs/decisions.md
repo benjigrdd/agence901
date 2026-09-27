@@ -109,3 +109,10 @@ reste sûre même si un client contourne le dashboard. Erreurs : message `APP_�
 français. Les tâches serveur (sans `auth.uid()`) ne passent pas par le workflow. Les notes internes de
 l'éditeur sont isolées dans une table dédiée plutôt que protégées par des droits de colonne.
 
+## ADR-014 — Authentification du personnel (lot 13)
+
+Supabase Auth avec 2FA TOTP obligatoire, appliquée à trois niveaux : proxy Next (redirections), gardes
+serveur (`aal2` dans la `Session`) et base (`private.is_aal2()` dans toutes les policies). Les liens d'email
+utilisent `token_hash` vérifié côté serveur (`/auth/confirm`). Les opérations d'administration Auth
+(invitations) passent par une Edge Function : le dashboard n'a jamais la clé `service_role`.
+

@@ -1725,7 +1725,27 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      [_ in never]: never;
+      accept_invitations: { Args: Record<PropertyKey, never>; Returns: number };
+      can_manage_members: { Args: { p_tenant_id: string }; Returns: boolean };
+      record_invitation: {
+        Args: {
+          p_actor_id: string;
+          p_display_name: string;
+          p_permissions: Json;
+          p_role: Database['public']['Enums']['app_role'];
+          p_tenant_id: string;
+          p_user_id: string;
+        };
+        Returns: string;
+      };
+      staff_last_sign_in: {
+        Args: { p_tenant_id: string };
+        Returns: {
+          email: string;
+          last_sign_in_at: string;
+          user_id: string;
+        }[];
+      };
     };
     Enums: {
       alert_level: 'info' | 'important' | 'urgent';

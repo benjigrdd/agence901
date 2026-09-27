@@ -65,7 +65,7 @@ export default async function TenantLayout({ children, params }: LayoutProps<'/[
           breadcrumbLabels={BREADCRUMB_LABELS}
           tenants={tenants.items.map((t) => ({ slug: t.slug, name: t.name }))}
           currentSlug={tenant.slug}
-          user={describeUser(session, tenant.id)}
+          user={await describeUser(session, tenant.id)}
         />
         {isEditorView ? (
           <p role="status" className="border-b border-blue-300 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-900">

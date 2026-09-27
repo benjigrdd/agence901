@@ -34,7 +34,7 @@ export default async function PlatformLayout({ children }: LayoutProps<'/admin'>
       <SkipLink />
       <AppSidebar sections={SECTIONS} title={product} subtitle="Espace éditeur" navLabel="Navigation de l’espace éditeur" />
       <SidebarInset>
-        <Topbar basePath="/admin" rootLabel="Espace éditeur" breadcrumbLabels={BREADCRUMB_LABELS} user={describeUser(session, null)} />
+        <Topbar basePath="/admin" rootLabel="Espace éditeur" breadcrumbLabels={BREADCRUMB_LABELS} user={await describeUser(session, null)} />
         <main id="contenu" tabIndex={-1} className="flex-1 p-4 focus:outline-none sm:p-6">
           {children}
         </main>

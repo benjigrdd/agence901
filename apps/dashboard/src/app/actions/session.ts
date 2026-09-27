@@ -4,6 +4,7 @@ import { isPersonaKey } from '@app/data';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 
+import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { isMockDataSource } from '@/server/repos';
 import { invitedMembers, MEMBER_PERSONA_PREFIX, PERSONA_COOKIE } from '@/server/session';
 
@@ -26,6 +27,10 @@ export async function setMemberPersona(formData: FormData): Promise<void> {
 }
 
 export async function signOut(): Promise<void> {
+  if (!isMockDataSource()) {
+    const supabase = await createSupabaseServerClient();
+    await supabase.auth.signOut({ scope: 'local' });
+  }
   (await cookies()).delete(PERSONA_COOKIE);
   redirect('/connexion');
 }
