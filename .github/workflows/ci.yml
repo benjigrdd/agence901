@@ -30,3 +30,31 @@ jobs:
       - run: pnpm typecheck
 
       - run: pnpm test
+
+  database:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # Les migrations derivees de TypeScript (enums, donnees par defaut) doivent etre a jour.
+      - run: pnpm db:generate && git diff --exit-code supabase/migrations
+
+      - run: pnpm db:start
+
+      - run: pnpm db:lint
+
+      # Tests pgTAP : schema, isolation entre communes (RLS), stockage.
+      - run: pnpm db:test
+
+      # Le seed de demonstration doit passer sur une base vierge.
+      - run: pnpm db:seed

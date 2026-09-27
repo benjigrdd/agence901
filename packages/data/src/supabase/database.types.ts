@@ -1370,6 +1370,32 @@ export type Database = {
           },
         ];
       };
+      tenant_internal_notes: {
+        Row: {
+          notes: string | null;
+          tenant_id: string;
+          updated_at: string;
+        };
+        Insert: {
+          notes?: string | null;
+          tenant_id: string;
+          updated_at?: string;
+        };
+        Update: {
+          notes?: string | null;
+          tenant_id?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'tenant_internal_notes_tenant_id_fkey';
+            columns: ['tenant_id'];
+            isOneToOne: true;
+            referencedRelation: 'tenants';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       tenant_modules: {
         Row: {
           created_at: string;
@@ -1477,7 +1503,6 @@ export type Database = {
           created_at: string;
           id: string;
           insee_code: string;
-          internal_notes: string | null;
           name: string;
           parent_id: string | null;
           plan: Database['public']['Enums']['tenant_plan'];
@@ -1496,7 +1521,6 @@ export type Database = {
           created_at?: string;
           id?: string;
           insee_code: string;
-          internal_notes?: string | null;
           name: string;
           parent_id?: string | null;
           plan?: Database['public']['Enums']['tenant_plan'];
@@ -1515,7 +1539,6 @@ export type Database = {
           created_at?: string;
           id?: string;
           insee_code?: string;
-          internal_notes?: string | null;
           name?: string;
           parent_id?: string | null;
           plan?: Database['public']['Enums']['tenant_plan'];

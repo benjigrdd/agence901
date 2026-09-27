@@ -35,7 +35,8 @@ type Entity = {
 };
 
 const ENTITIES: Entity[] = [
-  { schema: shared.TenantSchema, table: 'tenants' },
+  // notes internes : table `tenant_internal_notes` (editeur uniquement).
+  { schema: shared.TenantSchema, table: 'tenants', exceptions: { internalNotes: null } },
   { schema: shared.TenantBrandingSchema, table: 'tenant_branding' },
   { schema: shared.TenantModuleSchema, table: 'tenant_modules' },
   { schema: shared.TenantAppConfigSchema, table: 'tenant_app_config' },

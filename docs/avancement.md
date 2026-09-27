@@ -11,7 +11,8 @@
 | 07 | Super-admin | Terminé |
 | 08–10 | App mobile | Reporté (l'app sera branchée après les lots 11–14) |
 | 11 | Supabase : schéma | Terminé |
-| 12–19 | Voir `00-plan-et-mode-emploi.md` | À faire |
+| 12 | RLS, stockage, tests d'isolation | Terminé |
+| 13–19 | Voir `00-plan-et-mode-emploi.md` | À faire |
 
 ## Lot 01 — Monorepo et conventions
 
@@ -165,4 +166,17 @@
 - pgTAP `supabase/tests/database/01_schema.test.sql` (21 tests) : tables, RLS partout, clé composite,
   références `2026-00001` / `2026-00002` et redémarrage par commune, défauts à la création, diff d'audit.
 - Projet Supabase en ligne fourni : `ricbljsdibhbysntzuuf` (utilisé comme **staging**, non encore relié).
+
+## Lot 12 — RLS, stockage et tests d'isolation
+
+- Fonctions d'aide `private.*` (2FA, rôle, droit par module, commune active, module actif, commune de l'habitant).
+- Policies sur toutes les tables (matrice : `docs/rls.md`) ; 3 tables serveur sans policy (compteurs, livraisons, file push).
+- Triggers de règles métier avec codes `APP_…` : circuit de validation des contenus, transitions et doublons
+  des signalements, rejet motivé et public, garde du dernier administrateur.
+- Notes internes de l'éditeur déplacées dans `tenant_internal_notes` (jamais lisibles par la commune ni l'app).
+- Buckets `public-media`, `report-photos` (privé), `branding`, `exports` (privé) et leurs policies par chemin.
+- pgTAP : 63 tests (schéma 21, isolation 34 par rôle : anonyme, habitant, agent, admin, admin sans 2FA,
+  éditeur ; stockage 8). Job CI `database` : génération à jour, lint, tests, seed.
+- Spec du lot relue partiellement (fichier iCloud indisponible pendant la session) : périmètre reconstitué
+  depuis le début de la spec et les exigences des lots 13 et 14.
 

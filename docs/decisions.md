@@ -102,3 +102,10 @@ Les enums Postgres et les données par défaut d'une commune sont générés dep
 Toute référence interne à une commune passe par une clé étrangère composite `(tenant_id, id)`.
 Le seed local réutilise les fixtures du mock : mêmes données sur les deux adaptateurs.
 
+## ADR-013 — Règles métier dupliquées en base (lot 12)
+
+Les droits (`can()`) et les circuits de validation sont réimplémentés en SQL (policies + triggers) : la base
+reste sûre même si un client contourne le dashboard. Erreurs : message `APP_…` stable et détail en
+français. Les tâches serveur (sans `auth.uid()`) ne passent pas par le workflow. Les notes internes de
+l'éditeur sont isolées dans une table dédiée plutôt que protégées par des droits de colonne.
+
