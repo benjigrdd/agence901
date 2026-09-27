@@ -30,6 +30,7 @@ import type {
   PostType,
   Procedure,
   ProcedureInput,
+  PushTokenInput,
   Profile,
   Report,
   ReportCategory,
@@ -331,7 +332,15 @@ export interface CitizenRepository {
   updatePreferences(ctx: DataContext, input: CitizenPreferencesInput): Promise<CitizenProfile>;
   /** Uniquement les signalements de l'habitant, avec les evenements publics. */
   listMyReports(ctx: DataContext): Promise<CitizenReportView[]>;
+  /** Idempotent : un meme `clientRequestId` renvoie le signalement deja cree (file hors ligne). */
   createReport(ctx: DataContext, input: ReportInput): Promise<Report>;
+  /** Enregistre (ou rattache a l'habitant courant) le jeton push de l'appareil. */
+  registerPushToken(ctx: DataContext, input: PushTokenInput): Promise<void>;
+  unregisterPushToken(ctx: DataContext, token: string): Promise<void>;
+  /** Derniere activite de l'habitant (mesure d'usage sans traceur : compteurs agreges par jour). */
+  touch(ctx: DataContext): Promise<void>;
+  /** RGPD : supprime le compte, le profil et les jetons ; les signalements restent, anonymises. */
+  deleteMyData(ctx: DataContext): Promise<void>;
   /** Contenu publie, lisible sans session. */
   publicFeed(ctx: DataContext): Promise<PublicFeed>;
 }

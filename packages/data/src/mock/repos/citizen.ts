@@ -5,6 +5,8 @@ import {
   DEFAULT_NOTIFICATION_PREFS,
   formatReportReference,
   parseReportReference,
+  PushTokenInputSchema,
+  PushTokenSchema,
   ReportEventSchema,
   ReportInputSchema,
   ReportSchema,
@@ -19,6 +21,8 @@ import { nowIso } from '../runtime';
 
 export function createCitizenRepository(rt: MockRuntime): CitizenRepository {
   const { store } = rt;
+  /** `clientRequestId` → signalement deja cree (idempotence des renvois de l'app). */
+  const requestIds = new Map<string, string>();
 
   const findProfile = (ctx: DataContext, userId: string) =>
     store.citizens.forTenant(ctx.tenantId).find((c) => c.userId === userId);
@@ -96,6 +100,9 @@ export function createCitizenRepository(rt: MockRuntime): CitizenRepository {
     async createReport(ctx, input) {
       const session = requireCitizen(store, ctx);
       const data = parseInput(ReportInputSchema, input);
+      const retry = data.clientRequestId ? requestIds.get(`${ctx.tenantId}:${data.clientRequestId}`) : undefined;
+      const already = retry ? store.reports.get(ctx.tenantId, retry) : undefined;
+      if (already) return already;
       if (!store.reportCategories.get(ctx.tenantId, data.categoryId)) {
         throw new ValidationError('Catégorie inconnue', [{ path: 'categoryId', message: 'Catégorie inconnue' }]);
       }
@@ -117,6 +124,7 @@ export function createCitizenRepository(rt: MockRuntime): CitizenRepository {
         updatedAt: nowString,
       });
       store.reports.set(report);
+      if (data.clientRequestId) requestIds.set(`${ctx.tenantId}:${data.clientRequestId}`, report.id);
       store.reportEvents.set(
         parseInput(ReportEventSchema, {
           id: rt.newId(),
@@ -133,6 +141,40 @@ export function createCitizenRepository(rt: MockRuntime): CitizenRepository {
         }),
       );
       return report;
+    },
+
+    async registerPushToken(ctx, input) {
+      const session = requireCitizen(store, ctx);
+      const data = parseInput(PushTokenInputSchema, input);
+      const now = nowIso(rt);
+      const existing = store.pushTokens.all().find((t) => t.token === data.token);
+      // Un meme appareil peut changer d'habitant (reinstallation) : le jeton est rattache au dernier.
+      if (existing) store.pushTokens.delete(existing.id);
+      store.pushTokens.set(
+        parseInput(PushTokenSchema, { id: existing?.id ?? rt.newId(), tenantId: ctx.tenantId, userId: session.userId, ...data, lastSeenAt: now, invalidAt: null, createdAt: existing?.createdAt ?? now, updatedAt: now }),
+      );
+    },
+
+    async unregisterPushToken(ctx, token) {
+      const session = requireCitizen(store, ctx);
+      const existing = store.pushTokens.forTenant(ctx.tenantId).find((t) => t.token === token && t.userId === session.userId);
+      if (existing) store.pushTokens.delete(existing.id);
+    },
+
+    async touch(ctx) {
+      const session = requireCitizen(store, ctx);
+      const profile = store.citizens.forTenant(ctx.tenantId).find((c) => c.userId === session.userId);
+      if (profile) store.citizens.set({ ...profile, lastSeenAt: nowIso(rt), updatedAt: nowIso(rt) });
+    },
+
+    async deleteMyData(ctx) {
+      const session = requireCitizen(store, ctx);
+      for (const profile of store.citizens.all().filter((c) => c.userId === session.userId)) store.citizens.delete(profile.id);
+      for (const token of store.pushTokens.all().filter((t) => t.userId === session.userId)) store.pushTokens.delete(token.id);
+      // Les signalements restent utiles a la commune : detaches de l'habitant et sans email.
+      for (const report of store.reports.all().filter((r) => r.reporterId === session.userId)) {
+        store.reports.set({ ...report, reporterId: null, contactEmail: null, updatedAt: nowIso(rt) });
+      }
     },
 
     async publicFeed(ctx) {

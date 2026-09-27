@@ -12,6 +12,7 @@ export * from './place';
 export * from './place-category';
 export * from './post';
 export * from './procedure';
+export * from './push-token';
 export * from './profile';
 export * from './report';
 export * from './report-category';

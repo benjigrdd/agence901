@@ -1,12 +1,12 @@
 import type { Report } from '@app/shared';
-import { CitizenPreferencesInputSchema, ReportInputSchema } from '@app/shared';
+import { CitizenPreferencesInputSchema, PushTokenInputSchema, ReportInputSchema } from '@app/shared';
 
 import type { DataContext } from '../../context';
-import { ForbiddenError, NotFoundError } from '../../errors';
+import { ForbiddenError, NotFoundError, ValidationError } from '../../errors';
 import { parseInput } from '../../list';
 import type { CitizenRepository } from '../../ports';
 import type { ClientResolver } from '../core';
-import { check, pointToEwkt, unwrap } from '../core';
+import { check, pointToEwkt, toDataError, unwrap } from '../core';
 import * as m from '../mappers';
 
 /**
@@ -71,26 +71,62 @@ export function createCitizenRepository(resolve: ClientResolver): CitizenReposit
     async createReport(ctx, input) {
       const session = requireCitizen(ctx);
       const data = parseInput(ReportInputSchema, input);
-      const db = (await resolve(ctx));
-      const created = unwrap(
-        await db
-          .from('reports')
-          .insert({
-            tenant_id: ctx.tenantId,
-            category_id: data.categoryId,
-            description: data.description,
-            point: pointToEwkt(data.point),
-            address: data.address,
-            contact_email: data.contactEmail,
-            reporter_id: session.userId,
-          })
-          .select('id')
-          .single(),
-      );
-      if (data.photos.length) {
-        check(await db.from('report_media').insert(data.photos.map((path) => ({ tenant_id: ctx.tenantId, report_id: created.id, path }))));
+      const db = await resolve(ctx);
+      const byRequest = async () =>
+        data.clientRequestId
+          ? (await db.from('v_reports').select('*').eq('tenant_id', ctx.tenantId).eq('client_request_id', data.clientRequestId).maybeSingle()).data
+          : null;
+      // Renvoi depuis la file hors ligne : le signalement existe deja.
+      const previous = await byRequest();
+      if (previous) return m.toReport(previous, []);
+      const inserted = await db
+        .from('reports')
+        .insert({
+          tenant_id: ctx.tenantId,
+          category_id: data.categoryId,
+          description: data.description,
+          point: pointToEwkt(data.point),
+          address: data.address,
+          contact_email: data.contactEmail,
+          reporter_id: session.userId,
+          client_request_id: data.clientRequestId,
+        })
+        .select('id')
+        .single();
+      if (inserted.error) {
+        // Deux envois simultanes du meme signalement : on renvoie celui qui a ete enregistre.
+        const raced = inserted.error.code === '23505' ? await byRequest() : null;
+        if (raced) return m.toReport(raced, []);
+        throw toDataError(inserted.error);
       }
-      return m.toReport(unwrap(await db.from('v_reports').select('*').eq('id', created.id).single()), []);
+      if (data.photos.length) {
+        const own = `${ctx.tenantId}/${session.userId}/`;
+        if (data.photos.some((p) => !p.startsWith(own))) throw new ValidationError('Photo invalide', [{ path: 'photos', message: 'Photo invalide' }]);
+        check(await db.from('report_media').insert(data.photos.map((path) => ({ tenant_id: ctx.tenantId, report_id: inserted.data.id, path }))));
+      }
+      return m.toReport(unwrap(await db.from('v_reports').select('*').eq('id', inserted.data.id).single()), []);
+    },
+
+    async registerPushToken(ctx, input) {
+      requireCitizen(ctx);
+      const data = parseInput(PushTokenInputSchema, input);
+      check(await (await resolve(ctx)).rpc('register_push_token', { p_token: data.token, p_platform: data.platform, p_locale: data.locale }));
+    },
+
+    async unregisterPushToken(ctx, token) {
+      const session = requireCitizen(ctx);
+      check(await (await resolve(ctx)).from('push_tokens').delete().eq('user_id', session.userId).eq('token', token));
+    },
+
+    async touch(ctx) {
+      requireCitizen(ctx);
+      check(await (await resolve(ctx)).rpc('touch_citizen'));
+    },
+
+    async deleteMyData(ctx) {
+      requireCitizen(ctx);
+      const { error } = await (await resolve(ctx)).functions.invoke('delete-account', { body: {} });
+      if (error) throw new ForbiddenError('Suppression impossible pour ce compte');
     },
 
     async publicFeed(ctx) {

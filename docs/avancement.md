@@ -14,7 +14,8 @@
 | 12 | RLS, stockage, tests d'isolation | Terminé |
 | 13 | Auth du personnel, 2FA, invitations | Terminé |
 | 14 | Branchement du dashboard sur Supabase | Terminé |
-| 15–19 | Voir `00-plan-et-mode-emploi.md` | À faire |
+| 15 | Branchement de l'app mobile (côté plateforme) | Terminé (app à brancher : `docs/integration-app-mobile.md`) |
+| 16–19 | Voir `00-plan-et-mode-emploi.md` | À faire |
 
 ## Lot 01 — Monorepo et conventions
 
@@ -217,4 +218,19 @@
   (`SUPABASE_CONTRACT=1`, en CI) ; Playwright Supabase 10 parcours (auth + accueil, traitement d'un
   signalement, validation agent → admin, téléversement Storage, droits 403/404, audit des accès éditeur).
 - Bascule : `DATA_SOURCE=supabase` + `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+
+## Lot 15 — Branchement de l'app mobile, côté plateforme
+
+L'app n'existe pas encore : tout ce dont elle aura besoin est prêt et testé côté plateforme.
+- Session anonyme Supabase, profil habitant, fil public, préférences (dépôt `citizen` de `@app/data`).
+- Signalement **idempotent** (`clientRequestId`, contrainte unique) pour la file hors ligne ; photos dans
+  le bucket privé `report-photos` (dossier de l'habitant) ; premier événement public « Signalement reçu. ».
+- Jetons push : `register_push_token` (rattache l'appareil à l'habitant courant), `unregisterPushToken`.
+- Mesure d'usage sans traceur : `touch_citizen()` (date du jour) et agrégation `private.compute_usage_daily`.
+- RGPD : Edge Function `delete-account` (vérifie le jeton, détache et anonymise les signalements, supprime
+  profil, jetons et compte Auth ; refusée pour le personnel).
+- Tests : contrat commun (+2 : idempotence, jetons/activité) sur mock et Supabase, et parcours réel
+  (`citizen-flow.test.ts` : session anonyme → photo → signalement vu par le personnel en URL signée →
+  suppression ; invitation d'un agent via l'Edge Function `invite-member`).
+- Guide pour la future app : `docs/integration-app-mobile.md`.
 

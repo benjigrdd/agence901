@@ -17,6 +17,7 @@ import {
   POST_TYPES,
   PROCEDURE_CATEGORIES,
   PROCEDURE_KINDS,
+  PUSH_PLATFORMS,
   REPORT_EVENT_KINDS,
   REPORT_EVENT_VISIBILITIES,
   REPORT_PRIORITIES,
@@ -59,9 +60,9 @@ export const SQL_ENUMS: Record<string, readonly string[]> = {
   review_action: REVIEW_ACTIONS,
   audit_action: AUDIT_ACTIONS,
   store_publication_status: STORE_PUBLICATION_STATUSES,
-  // Propres a la base (pas de schema zod correspondant).
+  push_platform: PUSH_PLATFORMS,
+  // Propre a la base (pas de schema zod correspondant).
   notification_status: ['scheduled', 'sent', 'failed', 'cancelled'],
-  push_platform: ['ios', 'android'],
 };
 
 const lit = (v: string) => `'${v.replace(/'/g, "''")}'`;

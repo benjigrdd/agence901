@@ -138,7 +138,7 @@ reset role;
 set local role authenticated;
 set local request.jwt.claims = '{"sub": "c0000000-0000-4000-8000-00000000000a", "role": "authenticated", "aal": "aal1", "is_anonymous": true}';
 select is((select count(*)::int from public.reports), 1, 'habitant A : uniquement son signalement');
-select is((select count(*)::int from public.report_events), 1, 'habitant A : uniquement les evenements publics de son signalement');
+select is((select count(*)::int from public.report_events), 2, 'habitant A : uniquement les evenements publics de son signalement (recu + pris en compte)');
 select is((select count(*)::int from public.citizen_profiles), 1, 'habitant A : uniquement son profil');
 select throws_ok(
   $$insert into public.reports (tenant_id, category_id, description, point, address, reporter_id)

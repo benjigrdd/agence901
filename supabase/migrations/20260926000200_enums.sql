@@ -24,5 +24,5 @@ create type public.reviewable_entity as enum ('post', 'event');
 create type public.review_action as enum ('submitted', 'approved', 'rejected');
 create type public.audit_action as enum ('create', 'update', 'delete', 'transition', 'invite', 'permissions', 'disable', 'enable', 'upload', 'reorder', 'send', 'platform_access');
 create type public.store_publication_status as enum ('not_started', 'accounts_pending', 'in_review', 'published', 'rejected');
-create type public.notification_status as enum ('scheduled', 'sent', 'failed', 'cancelled');
 create type public.push_platform as enum ('ios', 'android');
+create type public.notification_status as enum ('scheduled', 'sent', 'failed', 'cancelled');

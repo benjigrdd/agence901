@@ -14,7 +14,7 @@
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "format": "prettier --write .",
-    "db:start": "supabase start -x logflare,vector,imgproxy,edge-runtime,supavisor",
+    "db:start": "supabase start -x logflare,vector,imgproxy,supavisor",
     "db:stop": "supabase stop",
     "db:generate": "tsx scripts/db/generate-sql.ts",
     "db:reset": "supabase db reset",

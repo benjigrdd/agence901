@@ -157,3 +157,7 @@ export type AuditAction = (typeof AUDIT_ACTIONS)[number];
 export const STORE_PUBLICATION_STATUSES = ['not_started', 'accounts_pending', 'in_review', 'published', 'rejected'] as const;
 export type StorePublicationStatus = (typeof STORE_PUBLICATION_STATUSES)[number];
 
+
+/** Plateformes des jetons de notification push. */
+export const PUSH_PLATFORMS = ['ios', 'android'] as const;
+export type PushPlatform = (typeof PUSH_PLATFORMS)[number];

@@ -237,6 +237,38 @@ export function describeRepositoryContract(name: string, createRepos: () => Repo
         await expect(repos.posts.list(citizen)).rejects.toBeInstanceOf(NotFoundError);
       });
 
+      it('un renvoi du même signalement (file hors ligne) ne crée pas de doublon', async () => {
+        const repos = createRepos();
+        const citizen = ctxOf('citizen-alpha', 'alpha');
+        const category = (await repos.reportCategories.list(citizen))[0];
+        const input = {
+          categoryId: category?.id ?? '',
+          description: 'Lampadaire éteint depuis hier soir.',
+          point: { lat: 47.39, lng: 0.69 },
+          address: '3 rue du Test',
+          contactEmail: null,
+          photos: [],
+          clientRequestId: crypto.randomUUID(),
+        };
+        const first = await repos.citizen.createReport(citizen, input);
+        const again = await repos.citizen.createReport(citizen, input);
+        expect(again.id).toBe(first.id);
+        expect(first.status).toBe('new');
+        const mine = await repos.citizen.listMyReports(citizen);
+        const created = mine.find((r) => r.report.id === first.id);
+        expect(created?.events.map((e) => e.message)).toContain('Signalement reçu.');
+      });
+
+      it('l’habitant enregistre son jeton push et signale son activité', async () => {
+        const repos = createRepos();
+        const citizen = ctxOf('citizen-alpha', 'alpha');
+        const token = `ExponentPushToken[contrat-${crypto.randomUUID()}]`;
+        await repos.citizen.registerPushToken(citizen, { token, platform: 'ios', locale: 'fr' });
+        await repos.citizen.registerPushToken(citizen, { token, platform: 'ios', locale: 'fr' });
+        await repos.citizen.touch(citizen);
+        await repos.citizen.unregisterPushToken(citizen, token);
+      });
+
       it('un média sans texte alternatif (et non décoratif) est rejeté', async () => {
         const repos = createRepos();
         const agent = ctxOf('agent-alpha', 'alpha');

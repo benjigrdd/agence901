@@ -55,8 +55,10 @@ export const ReportInputSchema = z.object({
   address: requiredText(300),
   contactEmail: emailSchema.nullable(),
   photos: z.array(z.string().min(1)).max(MAX_REPORT_PHOTOS, { error: `${MAX_REPORT_PHOTOS} photos maximum` }),
+  /** Identifiant genere par l'app pour chaque envoi : un renvoi (file hors ligne) ne cree pas de doublon. */
+  clientRequestId: idSchema.nullable().default(null),
 });
-export type ReportInput = z.infer<typeof ReportInputSchema>;
+export type ReportInput = z.input<typeof ReportInputSchema>;
 
 /** Changement de statut par le personnel. */
 export const ReportStatusChangeInputSchema = z.object({

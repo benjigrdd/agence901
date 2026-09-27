@@ -235,6 +235,7 @@ function emptyData(): MockData {
     sortingGuide: [],
     procedures: [],
     notifications: [],
+    pushTokens: [],
     audit: [],
     usage: [],
   };

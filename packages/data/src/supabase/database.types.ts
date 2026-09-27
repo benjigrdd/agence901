@@ -2485,6 +2485,7 @@ export type Database = {
     Functions: {
       accept_invitations: { Args: Record<PropertyKey, never>; Returns: number };
       add_report_note: { Args: { p_id: string; p_message: string }; Returns: undefined };
+      anonymize_citizen: { Args: { p_user_id: string }; Returns: undefined };
       assign_report: { Args: { p_id: string; p_service_id?: string }; Returns: undefined };
       can_manage_members: { Args: { p_tenant_id: string }; Returns: boolean };
       create_tenant: {
@@ -2516,6 +2517,14 @@ export type Database = {
         Returns: string;
       };
       record_platform_access: { Args: { p_tenant_id: string }; Returns: undefined };
+      register_push_token: {
+        Args: {
+          p_locale?: string;
+          p_platform: Database['public']['Enums']['push_platform'];
+          p_token: string;
+        };
+        Returns: undefined;
+      };
       reorder_procedures: { Args: { p_ids: string[]; p_tenant_id: string }; Returns: undefined };
       report_ids_in_district: { Args: { p_district_id: string }; Returns: string[] };
       report_stats: { Args: { p_tenant_id: string }; Returns: Json };
@@ -2542,6 +2551,7 @@ export type Database = {
           user_id: string;
         }[];
       };
+      touch_citizen: { Args: Record<PropertyKey, never>; Returns: undefined };
       transition_content: {
         Args: {
           p_comment?: string;

@@ -8,6 +8,7 @@ import type {
   Membership,
   MembershipPermission,
   Notification,
+  PushToken,
   Place,
   PlaceCategory,
   Post,
@@ -89,6 +90,7 @@ export type MockData = {
   sortingGuide: SortingGuideItem[];
   procedures: Procedure[];
   notifications: Notification[];
+  pushTokens: PushToken[];
   audit: AuditEntry[];
   usage: UsageDaily[];
 };
@@ -121,6 +123,7 @@ export type MockStore = {
   sortingGuide: Collection<SortingGuideItem>;
   procedures: Collection<Procedure>;
   notifications: Collection<Notification>;
+  pushTokens: Collection<PushToken>;
   audit: Collection<AuditEntry>;
   usage: Collection<UsageDaily>;
 };
@@ -154,6 +157,7 @@ export function createStore(data: MockData): MockStore {
     sortingGuide: new Collection(data.sortingGuide),
     procedures: new Collection(data.procedures),
     notifications: new Collection(data.notifications),
+    pushTokens: new Collection(data.pushTokens),
     audit: new Collection(data.audit),
     usage: new Collection(data.usage),
   };
