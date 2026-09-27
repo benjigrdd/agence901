@@ -95,3 +95,10 @@ données par défaut (`seedTenantDefaults`, reprise en SQL au lot 11), sa marque
 administrateur. Offres ramenées à `pilot` et `standard`. `/admin` répond 404 à tout autre compte que
 l'éditeur, pour ne pas révéler l'espace.
 
+## ADR-012 — Schéma Supabase dérivé des types partagés (lot 11)
+
+Les enums Postgres et les données par défaut d'une commune sont générés depuis `@app/shared` et
+`@app/data` (`pnpm db:generate`), et un test de parité compare les types générés aux schémas zod.
+Toute référence interne à une commune passe par une clé étrangère composite `(tenant_id, id)`.
+Le seed local réutilise les fixtures du mock : mêmes données sur les deux adaptateurs.
+

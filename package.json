@@ -13,11 +13,25 @@
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "db:start": "supabase start -x logflare,vector,imgproxy,edge-runtime,supavisor",
+    "db:stop": "supabase stop",
+    "db:generate": "tsx scripts/db/generate-sql.ts",
+    "db:reset": "supabase db reset",
+    "db:seed": "tsx scripts/seed-local.ts",
+    "db:types": "supabase gen types typescript --local --schema public > packages/data/src/supabase/database.types.ts && prettier --write packages/data/src/supabase/database.types.ts",
+    "db:lint": "supabase db lint --schema public,private --level warning --fail-on error",
+    "db:test": "supabase test db"
   },
   "devDependencies": {
     "@app/config": "workspace:*",
+    "@app/data": "workspace:*",
+    "@app/shared": "workspace:*",
+    "@supabase/supabase-js": "^2.117.2",
+    "postgres": "^3.4.9",
     "prettier": "3.9.9",
+    "supabase": "2.118.0",
+    "tsx": "^4.23.15",
     "turbo": "2.11.4",
     "typescript": "5.9.3"
   }

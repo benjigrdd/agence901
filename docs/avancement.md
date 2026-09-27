@@ -10,7 +10,8 @@
 | 06 | Accueil, Notifications, Environnement, Démarches, Paramètres, Audit | Terminé |
 | 07 | Super-admin | Terminé |
 | 08–10 | App mobile | Reporté (l'app sera branchée après les lots 11–14) |
-| 11–19 | Voir `00-plan-et-mode-emploi.md` | À faire |
+| 11 | Supabase : schéma | Terminé |
+| 12–19 | Voir `00-plan-et-mode-emploi.md` | À faire |
 
 ## Lot 01 — Monorepo et conventions
 
@@ -151,4 +152,17 @@
 - Tests : Vitest (défauts, création, slug, palette, accès tracé), Playwright 6 parcours (404 admin
   commune, assistant complet, module Agenda, suspension / réactivation, audit des accès, axe sur /admin).
   Les tests axe attendent la fin des animations et ignorent les toasts éphémères.
+
+## Lot 11 — Supabase : schéma
+
+- Supabase CLI 2.118 (dépendance du dépôt), Docker Desktop requis en local. `supabase/config.toml` :
+  connexions anonymes et MFA TOTP activées.
+- 12 migrations (extensions, enums générés, plateforme, territoire, personnes, contenus, signalements,
+  notifications, audit/usage, fonctions et triggers, données par défaut générées, RLS). Détail : `docs/database.md`.
+- `scripts/seed-local.ts` (`pnpm db:seed`) : charge les fixtures du mock (2 communes, 526 comptes dont
+  les personas avec le mot de passe local `Demo-Local-2026!`, 50 signalements…), refuse toute base non locale.
+- Types générés `packages/data/src/supabase/database.types.ts` ; test de parité zod ↔ base (29 tests).
+- pgTAP `supabase/tests/database/01_schema.test.sql` (21 tests) : tables, RLS partout, clé composite,
+  références `2026-00001` / `2026-00002` et redémarrage par commune, défauts à la création, diff d'audit.
+- Projet Supabase en ligne fourni : `ricbljsdibhbysntzuuf` (utilisé comme **staging**, non encore relié).
 

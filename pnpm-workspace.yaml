@@ -5,6 +5,10 @@ packages:
 # unrs-resolver fournit des binaires precompiles : son script d'installation est inutile.
 allowBuilds:
   unrs-resolver: false
+  # La CLI Supabase telecharge son binaire a l'installation.
+  supabase: true
+  # esbuild (via tsx) utilise ses binaires optionnels par plateforme.
+  esbuild: false
 
 # Recommande pour React Native / Metro en monorepo pnpm (equivalent de
 # node-linker=hoisted dans .npmrc, deplace ici depuis pnpm 10).
