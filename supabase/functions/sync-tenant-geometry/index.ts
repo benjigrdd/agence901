@@ -1,7 +1,7 @@
 // Contour officiel, centre et population de la commune (geo.api.gouv.fr, code INSEE). Reserve a
 // l'editeur : appele a la creation d'une commune et depuis sa fiche super-admin.
 import { corsHeaders, json } from '../_shared/cors.ts';
-import { callerClient, serviceClient, sourceUrl, UUID } from '../_shared/caller.ts';
+import { callerClient, rateLimited, serviceClient, sourceUrl, UUID } from '../_shared/caller.ts';
 
 const GEO_API_URL = 'https://geo.api.gouv.fr/communes';
 
@@ -25,6 +25,8 @@ Deno.serve(async (req) => {
   const { data: allowed } = await caller.rpc('is_platform_admin');
   if (!user.user || allowed !== true)
     return json({ code: 'APP_FORBIDDEN', error: "Action réservée à l'éditeur" }, 403);
+  const limited = await rateLimited(caller, 'sync-tenant-geometry', 5);
+  if (limited) return limited;
 
   const admin = serviceClient();
   const { data: tenant } = await admin

@@ -1,0 +1,5 @@
+# Cles publiques age des sauvegardes (une par ligne). Generer une paire avec :
+#   pnpm exec tsx scripts/backup/age.ts keygen
+# puis ajouter ICI la cle publique (age1…). La cle privee reste hors ligne chez l'editeur et dans le
+# secret AGE_IDENTITY de l'environnement GitHub protege « restore ». A completer avant la mise en production :
+# tant qu'aucune cle n'est presente, le workflow de sauvegarde echoue volontairement.

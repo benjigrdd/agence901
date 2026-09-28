@@ -1,5 +1,6 @@
 import type { CitizenProfile, Event, Post } from '@app/shared';
 import {
+  CitizenDataExportSchema,
   CitizenPreferencesInputSchema,
   CitizenProfileSchema,
   DEFAULT_NOTIFICATION_PREFS,
@@ -175,6 +176,54 @@ export function createCitizenRepository(rt: MockRuntime): CitizenRepository {
       for (const report of store.reports.all().filter((r) => r.reporterId === session.userId)) {
         store.reports.set({ ...report, reporterId: null, contactEmail: null, updatedAt: nowIso(rt) });
       }
+    },
+
+    async exportMyData(ctx) {
+      const session = requireCitizen(store, ctx);
+      const tenant = requireTenant(store, ctx.tenantId);
+      const profile = store.citizens.all().find((c) => c.userId === session.userId);
+      const categories = new Map(store.reportCategories.forTenant(ctx.tenantId).map((c) => [c.id, c.label]));
+      return CitizenDataExportSchema.parse({
+        exportedAt: nowIso(rt),
+        profile: profile
+          ? {
+              commune: tenant.name,
+              locale: profile.locale,
+              districtIds: profile.districtIds,
+              topicIds: profile.topicIds,
+              notificationPrefs: profile.notificationPrefs,
+              wasteZoneId: profile.wasteZoneId,
+              contactEmail: profile.contactEmail,
+              consentAt: profile.createdAt,
+              lastSeenAt: profile.lastSeenAt,
+              createdAt: profile.createdAt,
+            }
+          : null,
+        pushTokens: store.pushTokens
+          .all()
+          .filter((t) => t.userId === session.userId)
+          .map((t) => ({ platform: t.platform, locale: t.locale, createdAt: t.createdAt, lastSeenAt: t.lastSeenAt })),
+        reports: store.reports
+          .all()
+          .filter((r) => r.reporterId === session.userId)
+          .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+          .map((r) => ({
+            reference: r.reference,
+            category: categories.get(r.categoryId) ?? '',
+            description: r.description,
+            address: r.address,
+            position: r.point,
+            status: r.status,
+            contactEmail: r.contactEmail,
+            createdAt: r.createdAt,
+            resolvedAt: r.resolvedAt,
+            photos: r.photos,
+            publicHistory: store.reportEvents
+              .all()
+              .filter((e) => e.reportId === r.id && e.visibility === 'public')
+              .map((e) => ({ at: e.createdAt, status: e.toStatus, message: e.message })),
+          })),
+      });
     },
 
     async publicFeed(ctx) {

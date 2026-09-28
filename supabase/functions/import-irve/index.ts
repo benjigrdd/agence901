@@ -3,7 +3,7 @@
 // 2. l'API tabulaire de data.gouv.fr filtre cette ressource sur le code INSEE de la commune, page par
 //    page : le fichier national (~150 Mo) n'est jamais telecharge par la fonction (voir docs/imports.md).
 import { corsHeaders, json } from '../_shared/cors.ts';
-import { callerClient, serviceClient, sourceUrl, UUID } from '../_shared/caller.ts';
+import { callerClient, rateLimited, serviceClient, sourceUrl, UUID } from '../_shared/caller.ts';
 import {
   type DatagouvResource,
   IRVE_DATASET_ID,
@@ -36,6 +36,8 @@ Deno.serve(async (req) => {
   });
   if (!user.user || allowed !== true)
     return json({ code: 'APP_FORBIDDEN', error: 'Droit « Carte » en édition requis' }, 403);
+  const limited = await rateLimited(caller, 'import-irve', 3);
+  if (limited) return limited;
 
   const admin = serviceClient();
   const { data: tenant } = await admin

@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation';
 
 import { isSupabaseMode } from '@/lib/supabase/env';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { safeNextPath } from '@/lib/safe-redirect';
 
 export type FormState = { error?: string; fieldErrors?: Record<string, string>; message?: string } | null;
 
@@ -13,7 +14,7 @@ const GENERIC_LOGIN_ERROR = 'Identifiants incorrects';
 
 /** Destination interne apres connexion (jamais une URL externe). */
 function safeNext(value: FormDataEntryValue | null): string {
-  return typeof value === 'string' && value.startsWith('/') && !value.startsWith('//') ? value : '/';
+  return safeNextPath(value);
 }
 
 async function siteOrigin(): Promise<string> {

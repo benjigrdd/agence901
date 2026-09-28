@@ -13,6 +13,7 @@ exécutions simultanées ne traitent jamais la même ligne. Tout est idempotent.
 | Rappels de collecte (la veille) | 16 h UTC (18 h Paris l'été) | Edge Function `send-waste-reminders` |
 | Indicateurs d'usage de la veille | 1 h 15 UTC | `private.compute_usage_yesterday()` |
 | Purge RGPD | 2 h 30 UTC | `private.purge_retention(p_now)`, puis Edge Function `purge-exports` (archives d'export de plus de 7 jours) |
+| Alerte des tâches en échec (deux échecs consécutifs, vue `job_health`) | 7 h UTC | Edge Function `job-alerts` (email à l'éditeur via SMTP) |
 
 ## Notifications
 

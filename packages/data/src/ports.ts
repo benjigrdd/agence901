@@ -1,6 +1,7 @@
 import type {
   AuditAction,
   AuditEntry,
+  CitizenDataExport,
   CitizenPreferencesInput,
   CitizenProfile,
   CollectionOccurrence,
@@ -342,6 +343,8 @@ export interface CitizenRepository {
   touch(ctx: DataContext): Promise<void>;
   /** RGPD : supprime le compte, le profil et les jetons ; les signalements restent, anonymises. */
   deleteMyData(ctx: DataContext): Promise<void>;
+  /** RGPD (acces, portabilite) : toutes les donnees de l'habitant connecte, en JSON. */
+  exportMyData(ctx: DataContext): Promise<CitizenDataExport>;
   /** Contenu publie, lisible sans session. */
   publicFeed(ctx: DataContext): Promise<PublicFeed>;
 }

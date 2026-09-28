@@ -1,6 +1,7 @@
 import { PERSONA_KEYS, PERSONAS } from '@app/data';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
+import { connection } from 'next/server';
 
 import { PersonaSwitcher } from '@/components/dev/persona-switcher';
 import { Toaster } from '@/components/ui/sonner';
@@ -21,6 +22,8 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: LayoutProps<'/'>) {
+  // Rendu a la requete : le nonce CSP (proxy) doit etre applique aux scripts de chaque page.
+  await connection();
   const mock = isMockDataSource();
   const current = mock ? await getPersonaKey() : null;
   const staffPersonas = PERSONA_KEYS.map((key) => PERSONAS[key])

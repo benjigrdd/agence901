@@ -1,12 +1,12 @@
 import type { Report } from '@app/shared';
-import { CitizenPreferencesInputSchema, PushTokenInputSchema, ReportInputSchema } from '@app/shared';
+import { CitizenDataExportSchema, CitizenPreferencesInputSchema, PushTokenInputSchema, ReportInputSchema } from '@app/shared';
 
 import type { DataContext } from '../../context';
 import { ForbiddenError, NotFoundError, ValidationError } from '../../errors';
 import { parseInput } from '../../list';
 import type { CitizenRepository } from '../../ports';
 import type { ClientResolver } from '../core';
-import { check, pointToEwkt, toDataError, unwrap } from '../core';
+import { check, pointToEwkt, toDataError, unwrap, validated } from '../core';
 import * as m from '../mappers';
 
 /**
@@ -121,6 +121,13 @@ export function createCitizenRepository(resolve: ClientResolver): CitizenReposit
     async touch(ctx) {
       requireCitizen(ctx);
       check(await (await resolve(ctx)).rpc('touch_citizen'));
+    },
+
+    async exportMyData(ctx) {
+      requireCitizen(ctx);
+      const { data, error } = await (await resolve(ctx)).rpc('export_my_data');
+      if (error) throw toDataError(error);
+      return validated(CitizenDataExportSchema, data, 'export des données');
     },
 
     async deleteMyData(ctx) {

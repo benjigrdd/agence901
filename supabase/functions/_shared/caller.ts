@@ -1,5 +1,7 @@
 import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2';
 
+import { json } from './cors.ts';
+
 /** Client de l'appelant (son jeton) : droits verifies par la base (RLS, 2FA). */
 export function callerClient(req: Request): SupabaseClient {
   return createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_ANON_KEY') ?? '', {
@@ -39,3 +41,9 @@ export function callerAal(req: Request): string | null {
 
 /** Temporisation Overpass (politique d'usage) : une requete a la fois par commune, 30 s entre deux. */
 export const OVERPASS_COOLDOWN_MS = 30_000;
+
+/** Limitation du debit par utilisateur et par minute (table `rate_limits`) : reponse 429, ou `null`. */
+export async function rateLimited(caller: SupabaseClient, action: string, perMinute: number): Promise<Response | null> {
+  const { data } = await caller.rpc('consume_rate_limit', { p_action: action, p_max: perMinute });
+  return data === true ? null : json({ code: 'APP_BUSY', error: 'Trop de demandes : réessayez dans une minute.' }, 429);
+}

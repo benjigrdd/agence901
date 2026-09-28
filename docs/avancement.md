@@ -17,7 +17,8 @@
 | 15 | Branchement de l'app mobile (côté plateforme) | Terminé (app à brancher : `docs/integration-app-mobile.md`) |
 | 16 | Tâches serveur (push, programmation, RGPD) | Terminé |
 | 17 | Imports open data, CSV et export de réversibilité | Terminé (mention ODbL dans l'app mobile : à faire avec ses écrans) |
-| 18–19 | Voir `00-plan-et-mode-emploi.md` | À faire |
+| 18 | Pipeline de build et de publication mobile | Reporté (nécessite l'app mobile, lots 08–10, et un compte Expo/EAS) |
+| 19 | Qualité, conformité, mise en production | Terminé côté dépôt (déploiements et comptes de production : `docs/mise-en-production.md`) |
 
 ## Lot 01 — Monorepo et conventions
 
@@ -269,3 +270,36 @@ L'app n'existe pas encore : tout ce dont elle aura besoin est prêt et testé c�
   `deno test` (Deno absent du poste et de la CI ; couverture équivalente, sur le vrai runtime).
   L'app mobile n'ayant pas encore d'écrans, la mention ODbL y est documentée
   (`docs/integration-app-mobile.md`). Détail : `docs/imports.md`.
+
+## Lot 18 — Build et publication mobile : reporté
+
+Le lot suppose l'app mobile complète (lots 08–10 : `app.config.ts` dynamique, `tenants/<slug>/`, écrans
+branchés) et un compte Expo/EAS pour créer les projets, construire et publier. À reprendre après les lots 08–10.
+
+## Lot 19 — Qualité, conformité et mise en production
+
+- Accessibilité : axe sur toutes les routes pour 3 profils (bloquant en CI), parcours au clavier seul,
+  reflow 320 px et zoom 200 % automatisés ; grilles `docs/accessibilite/` (vérifications NVDA/VoiceOver et
+  grille mobile à réaliser), modèle de déclaration et engagements pour le schéma pluriannuel.
+- Sécurité : CSP à nonce par requête (proxy) et en-têtes statiques (HSTS 2 ans, nosniff, Referrer-Policy,
+  Permissions-Policy, X-Frame-Options), rendu dynamique pour le nonce ; correctif de redirection ouverte
+  (`safeNextPath`) ; table `rate_limits` et limitation du débit des Edge Functions sensibles ; test pgTAP
+  `search_path` des fonctions `security definer` et RLS ; CI : `pnpm audit`, gitleaks (`.gitleaks.toml`),
+  Dependabot, E2E, image Docker ; modèle de menaces (`docs/securite/`).
+- Supervision : Sentry UE (`sendDefaultPii: false`, effacement testé des emails, coordonnées, jetons et
+  paramètres d'URL, traces à 10 %, source maps si jeton), `/api/health`, vue `job_health` et Edge Function
+  `job-alerts` (email SMTP, testée avec Mailpit).
+- RGPD : RPC `export_my_data` (+ `citizen.exportMyData` dans `@app/data`), dossier `docs/rgpd/`
+  (annexe article 28, fiches registre, politique de confidentialité, violations, droits, trame d'AIPD).
+- Sauvegardes : `backup.yml` (pg_dump quotidien, fichiers hebdomadaires, chiffrement age, Scaleway fr-par,
+  rétention 30 jours), `restore-test.yml` mensuel ; procédure validée en local (dump → chiffrement →
+  déchiffrement → restauration sur schéma issu des migrations → contrôles) ; runbook `docs/runbooks/restauration.md`.
+- Déploiement : `deploy-supabase.yml` (staging automatique, production avec approbation), `vercel.json`
+  (`cdg1`), `output: 'standalone'` + `Dockerfile` (image testée localement : santé, en-têtes, nonce),
+  `docs/souverainete.md`, réglages Auth de production dans `docs/auth.md`.
+- **Non réalisé (comptes de production requis)** : projets Supabase staging/production, Vercel, domaine,
+  Sentry, Scaleway, Brevo, clé age réelle, exécution de `backup.yml` et `restore-test.yml`, checklist
+  pilote. Détail et inventaire des secrets : `docs/mise-en-production.md`.
+- Écarts : Sentry mobile non intégré (app mobile à développer) ; restauration faite en « données seules »
+  sur un schéma recréé par les migrations (procédure recommandée par Supabase) plutôt qu'en restauration
+  brute du dump dans une image Postgres, incompatible avec le schéma `auth`.

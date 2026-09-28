@@ -1,0 +1,11 @@
+**/node_modules
+**/.next
+**/.turbo
+**/test-results
+**/playwright-report
+apps/mobile
+supabase/.temp
+supabase/.branches
+.git
+**/.env*
+!**/.env.example

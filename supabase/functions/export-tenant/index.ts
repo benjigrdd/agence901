@@ -6,7 +6,7 @@
 import { strToU8, zipSync } from 'npm:fflate@0.8';
 
 import { corsHeaders, json } from '../_shared/cors.ts';
-import { callerAal, callerClient, serviceClient, UUID } from '../_shared/caller.ts';
+import { callerAal, callerClient, rateLimited, serviceClient, UUID } from '../_shared/caller.ts';
 
 type Table = { name: string; description: string; personal?: string[] };
 
@@ -106,6 +106,8 @@ Deno.serve(async (req) => {
       { code: 'APP_FORBIDDEN', error: 'Export réservé aux administrateurs de la commune' },
       403,
     );
+  const limited = await rateLimited(caller, 'export-tenant', 3);
+  if (limited) return limited;
   if (personal) {
     const { data: tenantAdmin } = await caller.rpc('is_tenant_admin', { p_tenant_id: tenantId });
     if (tenantAdmin !== true)

@@ -1,0 +1,28 @@
+# Mises a jour de securite et de versions (revue humaine obligatoire : aucune fusion automatique).
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      timezone: Europe/Paris
+    open-pull-requests-limit: 10
+    groups:
+      production:
+        dependency-type: production
+        update-types: [minor, patch]
+      development:
+        dependency-type: development
+        update-types: [minor, patch]
+    ignore:
+      # React et React Native sont imposes par le SDK Expo (ADR-007) : montee avec le SDK.
+      - dependency-name: react
+      - dependency-name: react-dom
+      - dependency-name: react-native
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      timezone: Europe/Paris

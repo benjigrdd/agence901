@@ -136,3 +136,14 @@ habituelles du dashboard (RLS, audit ligne à ligne) avec une validation zod par
 seul leur bilan est inscrit à part. L'export de réversibilité exclut par défaut les données personnelles
 des habitants ; seul un administrateur de la commune peut les inclure, jamais l'éditeur. Les archives
 sont supprimées par l'API Storage (une suppression SQL laisserait des fichiers orphelins).
+
+## ADR-017 — Mise en production : CSP à nonce, sauvegardes chiffrées hors Supabase (lot 19)
+
+La CSP est calculée par requête dans le proxy (nonce des scripts, `strict-dynamic`) ; toutes les pages sont
+rendues à la demande (`connection()` dans le layout racine), le dashboard étant de toute façon dynamique.
+Les styles en ligne restent autorisés (attributs `style` de React, MapLibre) : le risque XSS porte sur les
+scripts. Les sauvegardes quittent Supabase chiffrées avec age (bibliothèque `age-encryption`, format
+standard, clé publique dans le dépôt, clé privée hors ligne) vers Scaleway fr-par ; la restauration
+recrée le schéma par les migrations du dépôt puis restaure les données, seule méthode compatible avec les
+schémas gérés par Supabase (`auth`, `storage`). Le dashboard reste déployable hors Vercel (`standalone` +
+Docker). Sentry n'envoie aucune donnée personnelle : effacement systématique avant envoi, testé.

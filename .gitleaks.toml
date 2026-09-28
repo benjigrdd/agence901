@@ -1,0 +1,12 @@
+# Detection de secrets (CI : job `secrets`). Regles par defaut de gitleaks, plus une seule exception :
+# les cles de DEMONSTRATION de la CLI Supabase locale (emetteur `supabase-demo`), publiques et identiques
+# sur tous les postes, jamais valables sur un projet heberge. Toute autre cle reste detectee.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Cles de demonstration publiques de Supabase local (iss = supabase-demo)"
+regexes = [
+  # Charge utile JWT commencant par {"iss":"supabase-demo" (base64url).
+  '''eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIi[A-Za-z0-9_-]*\.[A-Za-z0-9_-]+''',
+]

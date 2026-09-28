@@ -2,6 +2,7 @@
 // L'appelant (JWT de l'utilisateur) doit etre admin de la commune ou editeur, en 2FA validee.
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
+import { rateLimited } from '../_shared/caller.ts';
 import { corsHeaders, json } from '../_shared/cors.ts';
 
 const MODULES = ['news', 'events', 'reports', 'map', 'mobility', 'procedures', 'participation', 'notifications', 'services', 'environment', 'media', 'districts', 'settings', 'audit'];
@@ -41,6 +42,8 @@ Deno.serve(async (req) => {
   const { data: caller } = await asCaller.auth.getUser();
   const { data: allowed } = await asCaller.rpc('can_manage_members', { p_tenant_id: tenantId });
   if (!caller.user || allowed !== true) return json({ code: 'APP_FORBIDDEN', error: 'Action réservée aux administrateurs' }, 403);
+  const limited = await rateLimited(asCaller, 'invite-member', 10);
+  if (limited) return limited;
 
   // 2. Compte Auth : invitation par email, ou compte existant.
   const admin = createClient(url, serviceKey, { auth: { persistSession: false } });

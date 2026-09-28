@@ -261,6 +261,18 @@ export function describeRepositoryContract(name: string, createRepos: () => Repo
         expect(created?.events.map((e) => e.message)).toContain('Signalement reçu.');
       });
 
+      it('l’habitant exporte ses données (RGPD) : les siennes uniquement, sans notes internes', async () => {
+        const repos = createRepos();
+        const citizen = ctxOf('citizen-alpha', 'alpha');
+        const mine = await repos.citizen.listMyReports(citizen);
+        const exported = await repos.citizen.exportMyData(citizen);
+        expect(exported.reports.map((r) => r.reference).sort()).toEqual(mine.map((m) => m.report.reference).sort());
+        const publicMessages = new Set(mine.flatMap((m) => m.events.map((e) => e.message)));
+        expect(exported.reports.flatMap((r) => r.publicHistory.map((h) => h.message)).every((m) => publicMessages.has(m))).toBe(true);
+        // Un autre compte n'obtient aucune donnee de cet habitant.
+        expect((await repos.citizen.exportMyData(ctxOf('admin-alpha', 'alpha'))).reports).toEqual([]);
+      });
+
       it('l’habitant enregistre son jeton push et signale son activité', async () => {
         const repos = createRepos();
         const citizen = ctxOf('citizen-alpha', 'alpha');

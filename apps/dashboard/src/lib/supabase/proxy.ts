@@ -6,7 +6,7 @@ import { NextResponse } from 'next/server';
 import { supabasePublicKey, supabaseUrl } from './env';
 
 /** Pages accessibles sans session. */
-const PUBLIC_PATHS = ['/connexion', '/mot-de-passe-oublie', '/reinitialiser', '/auth/confirm', '/espace-suspendu'];
+const PUBLIC_PATHS = ['/connexion', '/mot-de-passe-oublie', '/reinitialiser', '/auth/confirm', '/espace-suspendu', '/api/health'];
 const MFA_VERIFY = '/connexion/2fa';
 const MFA_SETUP = '/connexion/2fa/configurer';
 

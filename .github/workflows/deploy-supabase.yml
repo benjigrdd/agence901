@@ -1,0 +1,53 @@
+name: Déploiement Supabase
+
+# Migrations et Edge Functions : staging automatiquement a chaque fusion sur main, puis production
+# apres APPROBATION MANUELLE (environnement GitHub `production` avec relecteurs obligatoires).
+# Secrets par environnement (staging, production) : SUPABASE_ACCESS_TOKEN, SUPABASE_PROJECT_REF,
+# SUPABASE_DB_PASSWORD. Liste complete : docs/mise-en-production.md.
+
+on:
+  push:
+    branches: [main]
+    paths: ['supabase/**']
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-supabase
+  cancel-in-progress: false
+
+jobs:
+  staging:
+    runs-on: ubuntu-latest
+    environment: staging
+    timeout-minutes: 20
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - run: supabase link --project-ref "${{ secrets.SUPABASE_PROJECT_REF }}"
+      - run: supabase db push --include-all
+      - run: supabase functions deploy --project-ref "${{ secrets.SUPABASE_PROJECT_REF }}"
+
+  production:
+    needs: staging
+    runs-on: ubuntu-latest
+    # Relecteurs obligatoires configures sur l'environnement : aucune migration sans approbation.
+    environment: production
+    timeout-minutes: 20
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - run: supabase link --project-ref "${{ secrets.SUPABASE_PROJECT_REF }}"
+      # Liste des migrations appliquees, conservee dans le journal de l'execution.
+      - run: supabase migration list
+      - run: supabase db push --include-all
+      - run: supabase functions deploy --project-ref "${{ secrets.SUPABASE_PROJECT_REF }}"

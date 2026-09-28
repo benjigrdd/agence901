@@ -1,0 +1,97 @@
+name: Sauvegarde
+
+# Base de production : dump quotidien (pg_dump, format custom), chiffre avec age (cle publique du depot,
+# ops/backup/age-recipients.txt), envoye chez Scaleway Object Storage (fr-par). Fichiers Storage
+# (medias, photos, marques) : export hebdomadaire, chiffre de la meme facon. Retention 30 jours par la
+# regle de cycle de vie du bucket (ops/backup/lifecycle.json). Aucune donnee en clair hors de Supabase.
+#
+# Environnement GitHub `backup` : SUPABASE_DB_URL (utilisateur `backup_reader`, lecture seule),
+# SUPABASE_S3_ENDPOINT, SUPABASE_S3_ACCESS_KEY_ID, SUPABASE_S3_SECRET_ACCESS_KEY,
+# SCW_ACCESS_KEY, SCW_SECRET_KEY, SCW_BUCKET.
+
+on:
+  schedule:
+    - cron: '15 1 * * *' # base, chaque nuit
+    - cron: '45 1 * * 0' # fichiers, le dimanche
+  workflow_dispatch:
+    inputs:
+      storage:
+        description: Exporter aussi les fichiers Storage
+        type: boolean
+        default: false
+
+concurrency:
+  group: backup
+  cancel-in-progress: false
+
+env:
+  SCW_ENDPOINT: https://s3.fr-par.scw.cloud
+  AWS_DEFAULT_REGION: fr-par
+
+jobs:
+  database:
+    if: github.event.schedule != '45 1 * * 0'
+    runs-on: ubuntu-latest
+    environment: backup
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Client PostgreSQL 17
+        run: |
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSo /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
+          sudo apt-get update -q && sudo apt-get install -y -q postgresql-client-17
+      - name: Dump chiffre
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          name="db/$(date -u +%Y-%m-%dT%H%MZ).dump.age"
+          /usr/lib/postgresql/17/bin/pg_dump "$SUPABASE_DB_URL" --format=custom --schema=public --schema=private --schema=auth --schema=storage --file=/tmp/db.dump
+          pnpm exec tsx scripts/backup/age.ts encrypt /tmp/db.dump /tmp/db.dump.age
+          shred -u /tmp/db.dump
+          echo "NAME=$name" >> "$GITHUB_ENV"
+      - name: Envoi chez Scaleway
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.SCW_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.SCW_SECRET_KEY }}
+        run: aws s3 cp /tmp/db.dump.age "s3://${{ secrets.SCW_BUCKET }}/$NAME" --endpoint-url "$SCW_ENDPOINT"
+
+  storage:
+    if: github.event.schedule == '45 1 * * 0' || inputs.storage
+    runs-on: ubuntu-latest
+    environment: backup
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Telechargement des buckets (API S3 de Supabase Storage)
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.SUPABASE_S3_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.SUPABASE_S3_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: eu-west-3
+        run: |
+          for bucket in public-media report-photos branding; do
+            aws s3 sync "s3://$bucket" "/tmp/storage/$bucket" --endpoint-url "${{ secrets.SUPABASE_S3_ENDPOINT }}" --only-show-errors
+          done
+          tar -C /tmp/storage -czf /tmp/storage.tar.gz .
+          rm -rf /tmp/storage
+      - name: Chiffrement et envoi chez Scaleway
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.SCW_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.SCW_SECRET_KEY }}
+        run: |
+          pnpm exec tsx scripts/backup/age.ts encrypt /tmp/storage.tar.gz /tmp/storage.tar.gz.age
+          shred -u /tmp/storage.tar.gz
+          aws s3 cp /tmp/storage.tar.gz.age "s3://${{ secrets.SCW_BUCKET }}/storage/$(date -u +%Y-%m-%d).tar.gz.age" --endpoint-url "$SCW_ENDPOINT"

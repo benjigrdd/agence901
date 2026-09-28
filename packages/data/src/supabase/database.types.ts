@@ -1088,6 +1088,27 @@ export type Database = {
           },
         ];
       };
+      rate_limits: {
+        Row: {
+          action: string;
+          count: number;
+          user_id: string;
+          window_start: string;
+        };
+        Insert: {
+          action: string;
+          count?: number;
+          user_id: string;
+          window_start: string;
+        };
+        Update: {
+          action?: string;
+          count?: number;
+          user_id?: string;
+          window_start?: string;
+        };
+        Relationships: [];
+      };
       report_categories: {
         Row: {
           created_at: string;
@@ -2016,6 +2037,15 @@ export type Database = {
       };
     };
     Views: {
+      job_health: {
+        Row: {
+          failing: boolean | null;
+          job: string | null;
+          last_run_at: string | null;
+          last_status: string | null;
+        };
+        Relationships: [];
+      };
       v_districts: {
         Row: {
           color: string | null;
@@ -2517,6 +2547,7 @@ export type Database = {
       can_manage_members: { Args: { p_tenant_id: string }; Returns: boolean };
       claim_due_notifications: { Args: { p_limit?: number; p_now?: string }; Returns: Json };
       claim_outbox: { Args: { p_limit?: number }; Returns: Json };
+      consume_rate_limit: { Args: { p_action: string; p_max: number }; Returns: boolean };
       create_tenant: {
         Args: {
           p_branding: Json;
@@ -2534,6 +2565,7 @@ export type Database = {
         }[];
       };
       estimate_audience: { Args: { p_target: Json; p_tenant_id: string }; Returns: number };
+      export_my_data: { Args: Record<PropertyKey, never>; Returns: Json };
       has_module_permission: {
         Args: {
           p_level: Database['public']['Enums']['permission_level'];

@@ -8,6 +8,7 @@ import {
   OVERPASS_COOLDOWN_MS,
   serviceClient,
   sourceUrl,
+  rateLimited,
   UUID,
 } from '../_shared/caller.ts';
 import {
@@ -55,6 +56,8 @@ Deno.serve(async (req) => {
   });
   if (!user.user || allowed !== true)
     return json({ code: 'APP_FORBIDDEN', error: 'Droit « Carte » en édition requis' }, 403);
+  const limited = await rateLimited(caller, 'import-osm', 6);
+  if (limited) return limited;
 
   const admin = serviceClient();
   const { data: tenant } = await admin

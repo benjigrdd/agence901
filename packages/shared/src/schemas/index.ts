@@ -1,4 +1,5 @@
 export * from './audit-entry';
+export * from './citizen-data-export';
 export * from './citizen-profile';
 export * from './common';
 export * from './content-review';

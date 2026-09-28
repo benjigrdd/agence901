@@ -44,3 +44,19 @@ vérifiés côté serveur (`verifyOtp`). En local, les emails arrivent dans Mail
 
 Mot de passe `Demo-Local-2026!` et secret TOTP `JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP` (à ajouter dans une
 application d'authentification pour se connecter à la main). **Uniquement en local** : le seed refuse toute autre base.
+
+## Réglages de production (tableau de bord Supabase › Authentication)
+
+À appliquer sur **staging et production**, puis cocher (date et initiales). Non applicables en local.
+
+| Réglage | Valeur | Fait |
+|---|---|---|
+| Site URL et URL de redirection | `https://app.<domaine>`, `https://app.<domaine>/auth/confirm` (et l'URL de preview protégée pour staging) | [ ] |
+| MFA TOTP | activé (obligatoire côté application) | [ ] |
+| Durée maximale de session (« time-box ») | 12 h ; déconnexion après inactivité : 2 h | [ ] |
+| Rotation des jetons de rafraîchissement | activée, détection de réutilisation | [ ] |
+| Protection des mots de passe | longueur ≥ 12 (règle de l'app), **vérification des mots de passe compromis** (HaveIBeenPwned) | [ ] |
+| Inscriptions publiques par email | désactivées (comptes créés par invitation uniquement) ; connexions anonymes activées (app habitants) | [ ] |
+| SMTP | Brevo (UE), expéditeur `no-reply@<domaine>` avec SPF, DKIM et DMARC | [ ] |
+| Limitation du débit (Auth › Rate limits) | emails : 30/h ; vérifications OTP et connexions : valeurs par défaut ou plus strictes | [ ] |
+| Modèles d'email | ceux du dépôt (`supabase/templates/`) | [ ] |

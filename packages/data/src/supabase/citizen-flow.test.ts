@@ -53,6 +53,12 @@ run('app habitant sur Supabase (session anonyme)', () => {
 
     await citizen.registerPushToken(ctx, { token: `ExponentPushToken[${crypto.randomUUID()}]`, platform: 'android', locale: 'fr' });
 
+    // RGPD : export de ses donnees (acces, portabilite), sans donnees d'autres habitants.
+    const exported = await citizen.exportMyData(ctx);
+    expect(exported.profile?.commune).toBeTruthy();
+    expect(exported.pushTokens).toHaveLength(1);
+    expect(exported.reports).toEqual([expect.objectContaining({ reference: report.reference, contactEmail: 'habitant@exemple.test', photos: [photoPath], position: { lat: 47.39, lng: 0.69 } })]);
+
     // RGPD : suppression ; le signalement reste pour la commune, sans lien ni email.
     await citizen.deleteMyData(ctx);
     const after = await staff.reports.get(ctxOf('admin-alpha', 'alpha'), report.id);

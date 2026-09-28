@@ -55,7 +55,7 @@ select is(
 select is(
   (select array_agg(t.tablename::text order by t.tablename) from pg_tables t
    where t.schemaname = 'public' and not exists (select 1 from pg_policies p where p.schemaname = 'public' and p.tablename = t.tablename)),
-  array['notification_deliveries', 'push_outbox', 'tenant_counters'],
+  array['notification_deliveries', 'push_outbox', 'rate_limits', 'tenant_counters'],
   'seules les tables serveur sont sans policy');
 
 -- ---------------------------------------------------------------------------------------------
