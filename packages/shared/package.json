@@ -24,6 +24,6 @@
     "@app/config": "workspace:*",
     "@types/papaparse": "^5.5.2",
     "typescript": "5.9.3",
-    "vitest": "5.0.1"
+    "vitest": "5.0.2"
   }
 }
