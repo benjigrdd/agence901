@@ -6,7 +6,7 @@ import { ForbiddenError, NotFoundError, ValidationError } from '../../errors';
 import { parseInput } from '../../list';
 import type { CitizenRepository } from '../../ports';
 import type { ClientResolver } from '../core';
-import { check, pointToEwkt, toDataError, unwrap, validated } from '../core';
+import { check, pointToEwkt, selectAll, toDataError, unwrap, validated } from '../core';
 import * as m from '../mappers';
 
 /**
@@ -142,9 +142,9 @@ export function createCitizenRepository(resolve: ClientResolver): CitizenReposit
       const [posts, events, places] = await Promise.all([
         db.from('posts').select('*').eq('tenant_id', ctx.tenantId).eq('status', 'published').order('publish_at', { ascending: false }).limit(50),
         db.from('v_events').select('*').eq('tenant_id', ctx.tenantId).eq('status', 'published').gte('ends_at', now).order('starts_at').limit(50),
-        db.from('v_places').select('*').eq('tenant_id', ctx.tenantId),
+        selectAll(() => db.from('v_places').select('*').eq('tenant_id', ctx.tenantId).order('id')),
       ]);
-      return { posts: unwrap(posts).map(m.toPost), events: unwrap(events).map(m.toEvent), places: unwrap(places).map(m.toPlace) };
+      return { posts: unwrap(posts).map(m.toPost), events: unwrap(events).map(m.toEvent), places: places.map(m.toPlace) };
     },
   };
   return repo;

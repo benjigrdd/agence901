@@ -6,18 +6,19 @@ import nodemailer from 'npm:nodemailer@6';
 import { serviceClient } from '../_shared/caller.ts';
 import { json } from '../_shared/cors.ts';
 import { isServiceCall } from '../_shared/expo.ts';
+import { parseRows, readJsonObject, z } from '../_shared/validate.ts';
 
-type JobHealth = { job: string; last_run_at: string | null; last_status: string | null; failing: boolean };
+const JobHealthSchema = z.object({ job: z.string(), last_run_at: z.string().nullable(), last_status: z.string().nullable(), failing: z.boolean() });
 
 const isLocal = () => /kong|127\.0\.0\.1/.test(Deno.env.get('SUPABASE_URL') ?? '');
 
 Deno.serve(async (req) => {
   if (!isServiceCall(req)) return json({ error: 'Accès refusé' }, 401);
-  const body = (await req.json().catch(() => ({}))) as { smtpHost?: unknown; smtpPort?: unknown; alertTo?: unknown };
+  const body = await readJsonObject(req);
   const admin = serviceClient();
   const { data, error } = await admin.from('job_health').select('job, last_run_at, last_status, failing');
   if (error) return json({ error: 'Lecture de l’état des tâches impossible' }, 500);
-  const failing = ((data ?? []) as JobHealth[]).filter((j) => j.failing);
+  const failing = parseRows(JobHealthSchema, data).filter((j) => j.failing);
   if (failing.length === 0) return json({ failing: [], sent: false });
 
   // Surcharges acceptees uniquement en local (tests avec le serveur SMTP de developpement).

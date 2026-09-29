@@ -6,7 +6,7 @@ import { NotFoundError } from '../../errors';
 import { applyList, byString, parseInput } from '../../list';
 import type { PlacesRepository } from '../../ports';
 import type { ClientResolver } from '../core';
-import { check, pointToEwkt, requirePermission, unwrap } from '../core';
+import { check, pointToEwkt, requirePermission, selectAll, unwrap } from '../core';
 import * as m from '../mappers';
 
 export function createPlacesRepository(resolve: ClientResolver): PlacesRepository {
@@ -36,7 +36,13 @@ export function createPlacesRepository(resolve: ClientResolver): PlacesRepositor
     async list(ctx, params) {
       requirePermission(ctx, 'map', 'read');
       const categoryIds = params?.filters?.categoryId;
-      const items = unwrap(await (await resolve(ctx)).from('v_places').select('*').eq('tenant_id', ctx.tenantId))
+      const db = await resolve(ctx);
+      const rows = await selectAll(() => {
+        let query = db.from('v_places').select('*').eq('tenant_id', ctx.tenantId);
+        if (categoryIds?.length) query = query.in('category_id', categoryIds);
+        return query.order('id');
+      });
+      const items = rows
         .map(m.toPlace)
         .filter((p) => !categoryIds?.length || categoryIds.includes(p.categoryId));
       return applyList(items, params, {

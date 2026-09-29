@@ -2,6 +2,7 @@
 // l'editeur : appele a la creation d'une commune et depuis sa fiche super-admin.
 import { corsHeaders, json } from '../_shared/cors.ts';
 import { callerClient, rateLimited, serviceClient, sourceUrl, UUID } from '../_shared/caller.ts';
+import { readJsonObject } from '../_shared/validate.ts';
 
 const GEO_API_URL = 'https://geo.api.gouv.fr/communes';
 
@@ -15,7 +16,7 @@ const point = (g: Geometry | undefined) =>
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
-  const body = (await req.json().catch(() => ({}))) as { tenantId?: unknown; geoUrl?: unknown };
+  const body = await readJsonObject(req);
   const tenantId =
     typeof body.tenantId === 'string' && UUID.test(body.tenantId) ? body.tenantId : null;
   if (!tenantId) return json({ code: 'APP_INVALID_INPUT', error: 'Commune invalide' }, 400);

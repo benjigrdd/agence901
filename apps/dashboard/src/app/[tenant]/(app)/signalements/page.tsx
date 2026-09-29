@@ -5,6 +5,7 @@ import type { Metadata } from 'next';
 
 import { ViewSwitch } from '@/components/map/view-switch';
 import { PageHeader } from '@/components/page-header';
+import { TruncationNotice } from '@/components/truncation-notice';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { requirePermission } from '@/server/guards';
@@ -97,6 +98,7 @@ export default async function ReportsPage({ params, searchParams }: PageProps<'/
         </ul>
       </section>
 
+      <TruncationNotice shown={list.items.length} total={list.total} hint="Affinez les filtres ou exportez en CSV pour tout consulter." />
       <form method="get" className="mb-4 flex flex-wrap items-end gap-3" aria-label="Filtrer les signalements">
         {view === 'carte' ? <input type="hidden" name="vue" value="carte" /> : null}
         <div className="space-y-1">

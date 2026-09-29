@@ -9,7 +9,7 @@
     },
     "build": {
       "dependsOn": ["^build"],
-      "env": ["NEXT_PUBLIC_PRODUCT_NAME", "DATA_SOURCE", "EXPO_PUBLIC_DATA_SOURCE"],
+      "env": ["NEXT_PUBLIC_PRODUCT_NAME", "DATA_SOURCE", "ALLOW_MOCK_DATA", "EXPO_PUBLIC_DATA_SOURCE"],
       "outputs": [".next/**", "!.next/cache/**", "dist/**"]
     },
     "lint": {

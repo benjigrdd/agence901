@@ -1,8 +1,8 @@
 import type { ReportListItem } from '@app/data';
-import { MAX_PAGE_SIZE } from '@app/data';
 import { buildReportsCsv } from '@app/shared';
 
 import { requirePermission } from '@/server/guards';
+import { listAll } from '@/server/list-all';
 import { getRepos } from '@/server/repos';
 
 import { parseReportFilters } from '../filters';
@@ -15,12 +15,7 @@ export async function GET(request: Request, { params }: RouteContext<'/[tenant]/
   const { filters } = parseReportFilters(query);
   const repos = getRepos();
   const [categories, services] = await Promise.all([repos.reportCategories.list(ctx), repos.services.list(ctx)]);
-  const items: ReportListItem[] = [];
-  for (let page = 1; ; page++) {
-    const chunk = await repos.reports.list(ctx, { filters, page, pageSize: MAX_PAGE_SIZE });
-    items.push(...chunk.items);
-    if (items.length >= chunk.total || chunk.items.length === 0) break;
-  }
+  const items: ReportListItem[] = await listAll((page, pageSize) => repos.reports.list(ctx, { filters, page, pageSize }));
   const csv = buildReportsCsv(items, {
     categories: new Map(categories.map((c) => [c.id, c.label])),
     services: new Map(services.map((s) => [s.id, s.name])),

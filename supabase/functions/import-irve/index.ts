@@ -5,24 +5,21 @@
 import { corsHeaders, json } from '../_shared/cors.ts';
 import { callerClient, rateLimited, serviceClient, sourceUrl, UUID } from '../_shared/caller.ts';
 import {
-  type DatagouvResource,
   IRVE_DATASET_ID,
   type IrveRow,
   irveToPlaces,
   latestIrveResource,
 } from '../_shared/open-data.ts';
+import { DatagouvResourceSchema, isRecord, readJsonObject, validItems } from '../_shared/validate.ts';
 
 const DATASET_URL = `https://www.data.gouv.fr/api/1/datasets/${IRVE_DATASET_ID}/`;
 const TABULAR_URL = 'https://tabular-api.data.gouv.fr/api/resources';
+const datasetBody = (value: unknown) => (isRecord(value) ? value.resources : undefined);
 const MAX_PAGES = 40; // 50 points de charge par page : 2 000 points au plus par commune.
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
-  const body = (await req.json().catch(() => ({}))) as {
-    tenantId?: unknown;
-    datasetUrl?: unknown;
-    tabularUrl?: unknown;
-  };
+  const body = await readJsonObject(req);
   const tenantId =
     typeof body.tenantId === 'string' && UUID.test(body.tenantId) ? body.tenantId : null;
   if (!tenantId) return json({ code: 'APP_INVALID_INPUT', error: 'Commune invalide' }, 400);
@@ -63,7 +60,7 @@ Deno.serve(async (req) => {
     });
     if (!dataset.ok) return unavailable();
     const resource = latestIrveResource(
-      ((await dataset.json()) as { resources?: DatagouvResource[] }).resources ?? [],
+      validItems(DatagouvResourceSchema, datasetBody(await dataset.json())),
     );
     if (!resource) return unavailable();
     resourceId = resource.id;
@@ -73,12 +70,11 @@ Deno.serve(async (req) => {
     for (let page = 0; next && page < MAX_PAGES; page++) {
       const response = await fetch(next, { signal: AbortSignal.timeout(20_000) });
       if (!response.ok) return unavailable();
-      const payload = (await response.json()) as {
-        data?: IrveRow[];
-        links?: { next?: string | null };
-      };
-      rows.push(...(payload.data ?? []));
-      next = payload.links?.next ?? null;
+      const payload: unknown = await response.json();
+      if (!isRecord(payload)) return unavailable();
+      rows.push(...(Array.isArray(payload.data) ? payload.data.filter(isRecord) : []));
+      const links = payload.links;
+      next = isRecord(links) && typeof links.next === 'string' ? links.next : null;
     }
   } catch {
     return unavailable();

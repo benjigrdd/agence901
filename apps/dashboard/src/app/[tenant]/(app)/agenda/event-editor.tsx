@@ -218,7 +218,7 @@ export function EventEditor(props: EventEditorProps) {
                 <select
                   id={fieldId('frequency')}
                   value={recurrence.frequency}
-                  onChange={(e) => updateRecurrence({ ...recurrence, frequency: e.target.value as RecurrenceFrequency })}
+                  onChange={(e) => updateRecurrence({ ...recurrence, frequency: RECURRENCE_FREQUENCIES.find((f) => f === e.target.value) ?? 'none' })}
                   className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm"
                 >
                   {RECURRENCE_FREQUENCIES.map((f) => (

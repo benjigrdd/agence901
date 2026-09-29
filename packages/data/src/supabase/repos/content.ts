@@ -6,7 +6,7 @@ import { ForbiddenError, NotFoundError, ValidationError } from '../../errors';
 import { applyList, byString, parseInput } from '../../list';
 import type { ContentTransitionInput, EventFilters, EventsRepository, PostFilters, PostsRepository } from '../../ports';
 import type { ClientResolver, Db } from '../core';
-import { check, pointToEwkt, requirePermission, requireStaff, unwrap } from '../core';
+import { check, pointToEwkt, requirePermission, requireStaff, selectAll, unwrap } from '../core';
 import * as m from '../mappers';
 
 export const PUBLISH_FORBIDDEN_MESSAGE = "Vous n'avez pas les droits pour publier";
@@ -52,7 +52,7 @@ async function reviewsOf(db: Db, ctx: DataContext, entity: 'post' | 'event', id:
 
 async function countsOf(db: Db, table: 'posts' | 'events', ctx: DataContext) {
   const counts = EMPTY_COUNTS();
-  for (const row of unwrap(await db.from(table).select('status').eq('tenant_id', ctx.tenantId))) counts[row.status] += 1;
+  for (const row of await selectAll(() => db.from(table).select('id, status').eq('tenant_id', ctx.tenantId).order('id'))) counts[row.status] += 1;
   return counts;
 }
 
@@ -81,7 +81,16 @@ export function createPostsRepository(resolve: ClientResolver): PostsRepository 
     async list(ctx, params) {
       requirePermission(ctx, 'news', 'read');
       const f: PostFilters | undefined = params?.filters;
-      const items = unwrap(await (await resolve(ctx)).from('posts').select('*').eq('tenant_id', ctx.tenantId))
+      const db = await resolve(ctx);
+      const rows = await selectAll(() => {
+        let query = db.from('posts').select('*').eq('tenant_id', ctx.tenantId);
+        if (f?.status?.length) query = query.in('status', f.status);
+        if (f?.type?.length) query = query.in('type', f.type);
+        if (f?.districtId) query = query.contains('district_ids', [f.districtId]);
+        if (f?.topicId) query = query.contains('topic_ids', [f.topicId]);
+        return query.order('id');
+      });
+      const items = rows
         .map(m.toPost)
         .filter(
           (p) =>
@@ -154,7 +163,15 @@ export function createEventsRepository(resolve: ClientResolver): EventsRepositor
     async list(ctx, params) {
       requirePermission(ctx, 'events', 'read');
       const f: EventFilters | undefined = params?.filters;
-      const items = unwrap(await (await resolve(ctx)).from('v_events').select('*').eq('tenant_id', ctx.tenantId))
+      const db = await resolve(ctx);
+      const rows = await selectAll(() => {
+        let query = db.from('v_events').select('*').eq('tenant_id', ctx.tenantId);
+        if (f?.status?.length) query = query.in('status', f.status);
+        if (f?.category?.length) query = query.in('category', f.category);
+        if (f?.to) query = query.lte('starts_at', f.to);
+        return query.order('id');
+      });
+      const items = rows
         .map(m.toEvent)
         .filter(
           (e) =>

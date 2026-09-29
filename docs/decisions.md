@@ -147,3 +147,20 @@ standard, clé publique dans le dépôt, clé privée hors ligne) vers Scaleway 
 recrée le schéma par les migrations du dépôt puis restaure les données, seule méthode compatible avec les
 schémas gérés par Supabase (`auth`, `storage`). Le dashboard reste déployable hors Vercel (`standalone` +
 Docker). Sentry n'envoie aucune donnée personnelle : effacement systématique avant envoi, testé.
+
+## ADR-018 — Source de données en échec fermé, listes complètes (correctifs d'audit)
+
+`DATA_SOURCE` est obligatoire en production : absente, le dashboard refuse de démarrer, et le mock
+(personas sans authentification) n'y est accepté qu'avec `ALLOW_MOCK_DATA=1` (démo, E2E sur build de
+production). Une variable oubliée chez l'hébergeur ne peut donc plus ouvrir le dashboard à tous. Le mock
+reste l'adaptateur des tests et des démos ; les nouvelles fonctionnalités se valident d'abord sur Supabase,
+la suite de contrat garantissant la parité.
+
+PostgREST tronque sans erreur au-delà de `max_rows` (1 000). Toute lecture non bornée d'une table qui
+grandit passe par `selectAll` (lots de 1 000 triés sur une clé unique), et les filtres simples (statut,
+catégorie, dates, tableaux) sont appliqués en SQL. La recherche insensible aux accents, le tri métier des
+signalements (priorité puis ancienneté) et le filtre « en retard » (délai de la catégorie) restent calculés
+dans l'adaptateur, à l'identique du mock ; les photos ne sont signées que pour la page renvoyée. Les
+exports et agrégats parcourent toutes les pages (`listAll`), et une liste affichée partiellement le dit
+(`TruncationNotice`). À reconsidérer si une commune dépasse ~20 000 lignes sur une même liste : colonnes
+de recherche `unaccent` générées, tri en SQL et pagination par `range` avec `count`.

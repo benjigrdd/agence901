@@ -1,6 +1,7 @@
 import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2';
 
 import { json } from './cors.ts';
+import { isRecord } from './validate.ts';
 
 /** Client de l'appelant (son jeton) : droits verifies par la base (RLS, 2FA). */
 export function callerClient(req: Request): SupabaseClient {
@@ -30,10 +31,8 @@ export function callerAal(req: Request): string | null {
   const token = (req.headers.get('Authorization') ?? '').replace(/^Bearer\s+/i, '');
   try {
     const payload = token.split('.')[1] ?? '';
-    const claims = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/'))) as {
-      aal?: unknown;
-    };
-    return typeof claims.aal === 'string' ? claims.aal : null;
+    const claims: unknown = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
+    return isRecord(claims) && typeof claims.aal === 'string' ? claims.aal : null;
   } catch {
     return null;
   }

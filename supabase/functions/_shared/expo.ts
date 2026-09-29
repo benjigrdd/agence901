@@ -1,6 +1,8 @@
 // Envoi via l'API Expo Push (par lots de 100). Le jeton d'acces Expo est lu dans l'environnement de la fonction.
+import { isRecord, type Ticket, TicketSchema, z } from './validate.ts';
+
 export type PushMessage = { to: string; title?: string; body: string; data?: Record<string, unknown>; channelId?: string; sound?: 'default'; priority?: 'high' | 'normal' };
-export type Ticket = { status: 'ok' | 'error'; id?: string; message?: string; details?: { error?: string } };
+export type { Ticket };
 
 const DEFAULT_EXPO_URL = 'https://exp.host/--/api/v2/push';
 
@@ -21,8 +23,9 @@ export async function sendPush(baseUrl: string, messages: PushMessage[]): Promis
     const batch = messages.slice(i, i + 100);
     const response = await fetch(`${baseUrl}/send`, { method: 'POST', headers: headers(), body: JSON.stringify(batch) });
     if (!response.ok) throw new Error(`Expo ${response.status}`);
-    const json = (await response.json()) as { data?: Ticket[] };
-    tickets.push(...(json.data ?? batch.map(() => ({ status: 'error' as const, message: 'Réponse Expo invalide' }))));
+    const body: unknown = await response.json();
+    const parsed = z.array(TicketSchema).safeParse(isRecord(body) ? body.data : undefined);
+    tickets.push(...(parsed.success ? parsed.data : batch.map((): Ticket => ({ status: 'error', message: 'Réponse Expo invalide' }))));
   }
   return tickets;
 }
@@ -32,8 +35,9 @@ export async function fetchReceipts(baseUrl: string, ids: string[]): Promise<Rec
   for (let i = 0; i < ids.length; i += 300) {
     const response = await fetch(`${baseUrl}/getReceipts`, { method: 'POST', headers: headers(), body: JSON.stringify({ ids: ids.slice(i, i + 300) }) });
     if (!response.ok) continue;
-    const json = (await response.json()) as { data?: Record<string, Ticket> };
-    Object.assign(receipts, json.data ?? {});
+    const body: unknown = await response.json();
+    const parsed = z.record(z.string(), TicketSchema).safeParse(isRecord(body) ? body.data : undefined);
+    if (parsed.success) Object.assign(receipts, parsed.data);
   }
   return receipts;
 }

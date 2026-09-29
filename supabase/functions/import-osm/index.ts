@@ -13,11 +13,11 @@ import {
 } from '../_shared/caller.ts';
 import {
   OSM_CATEGORY_KEYS,
-  type OsmElement,
   type OsmPlace,
   osmElementToPlace,
   overpassQuery,
 } from '../_shared/osm-mapping.ts';
+import { isRecord, OsmElementSchema, OsmPlaceSchema, readJsonObject, validItems } from '../_shared/validate.ts';
 
 const OVERPASS_URL = 'https://overpass-api.de/api/interpreter';
 // Politique d'usage Overpass : identifier le produit et un contact.
@@ -27,14 +27,7 @@ const isLocal = () => /kong|127\.0\.0\.1/.test(Deno.env.get('SUPABASE_URL') ?? '
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
-  const body = (await req.json().catch(() => ({}))) as {
-    tenantId?: unknown;
-    categories?: unknown;
-    dryRun?: unknown;
-    overpassUrl?: unknown;
-    cooldownMs?: unknown;
-    previewId?: unknown;
-  };
+  const body = await readJsonObject(req);
   const tenantId =
     typeof body.tenantId === 'string' && UUID.test(body.tenantId) ? body.tenantId : null;
   if (!tenantId) return json({ code: 'APP_INVALID_INPUT', error: 'Commune invalide' }, 400);
@@ -80,7 +73,7 @@ Deno.serve(async (req) => {
       .maybeSingle();
     const stored = preview?.details?.rows;
     if (Array.isArray(stored)) {
-      rows = (stored as OsmPlace[]).filter((r) => requested.includes(r.categoryKey));
+      rows = validItems(OsmPlaceSchema, stored).filter((r) => requested.includes(r.categoryKey));
       await admin
         .from('job_runs')
         .update({ details: { ...preview.details, rows: null } })
@@ -137,7 +130,8 @@ Deno.serve(async (req) => {
         signal: AbortSignal.timeout(70_000),
       });
       if (!response.ok) throw new Error(`Overpass ${response.status}`);
-      const elements = ((await response.json()) as { elements?: OsmElement[] }).elements ?? [];
+      const payload: unknown = await response.json();
+      const elements = validItems(OsmElementSchema, isRecord(payload) ? payload.elements : undefined);
       rows = elements.flatMap((e) => osmElementToPlace(e, tenant.name, requested) ?? []);
     } catch (error) {
       await finish('failed', { error: error instanceof Error ? error.message : 'Overpass' });

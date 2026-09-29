@@ -6,7 +6,7 @@ import { ValidationError } from '../../errors';
 import { applyList, byString, parseInput } from '../../list';
 import type { NotificationsRepository } from '../../ports';
 import type { ClientResolver, Db } from '../core';
-import { requirePermission, unwrap } from '../core';
+import { requirePermission, selectAll, unwrap } from '../core';
 import * as m from '../mappers';
 
 export function createNotificationsRepository(resolve: ClientResolver): NotificationsRepository {
@@ -21,7 +21,17 @@ export function createNotificationsRepository(resolve: ClientResolver): Notifica
     unwrap(await db.rpc('estimate_audience', { p_tenant_id: ctx.tenantId, p_target: target }));
 
   const listAll = async (db: Db, ctx: DataContext): Promise<Notification[]> =>
-    unwrap(await db.from('notifications').select('*').eq('tenant_id', ctx.tenantId)).map(m.toNotification);
+    (await selectAll(() => db.from('notifications').select('*').eq('tenant_id', ctx.tenantId).order('id'))).map(m.toNotification);
+
+  /** Regle anti-lassitude : seules les notifications autour du jour vise comptent (marge de fuseau). */
+  const listAround = async (db: Db, ctx: DataContext, day: Date): Promise<Notification[]> => {
+    const margin = 2 * 24 * 60 * 60 * 1000;
+    const from = new Date(day.getTime() - margin).toISOString();
+    const to = new Date(day.getTime() + margin).toISOString();
+    return (
+      await selectAll(() => db.from('notifications').select('*').eq('tenant_id', ctx.tenantId).gte('scheduled_at', from).lte('scheduled_at', to).order('id'))
+    ).map(m.toNotification);
+  };
 
   return {
     async list(ctx, params) {
@@ -46,7 +56,7 @@ export function createNotificationsRepository(resolve: ClientResolver): Notifica
       const data = parseInput(NotificationInputSchema, input);
       const db = (await resolve(ctx));
       await checkTargetIds(db, ctx, data.target);
-      if (!data.justification?.trim() && requiresNotificationJustification(await listAll(db, ctx), data, new Date())) {
+      if (!data.justification?.trim() && requiresNotificationJustification(await listAround(db, ctx, data.scheduledAt ? new Date(data.scheduledAt) : new Date()), data, new Date())) {
         throw new ValidationError(NOTIFICATION_JUSTIFICATION_REQUIRED_MESSAGE, [{ path: 'justification', message: NOTIFICATION_JUSTIFICATION_REQUIRED_MESSAGE }]);
       }
       if (data.linkedEntity) {

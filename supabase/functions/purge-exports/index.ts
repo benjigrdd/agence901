@@ -2,12 +2,13 @@
 import { json } from '../_shared/cors.ts';
 import { serviceClient } from '../_shared/caller.ts';
 import { isServiceCall } from '../_shared/expo.ts';
+import { readJsonObject } from '../_shared/validate.ts';
 
 const RETENTION_MS = 7 * 24 * 3600_000;
 
 Deno.serve(async (req) => {
   if (!isServiceCall(req)) return json({ error: 'Accès refusé' }, 401);
-  const body = (await req.json().catch(() => ({}))) as { now?: unknown };
+  const body = await readJsonObject(req);
   const now =
     typeof body.now === 'string' && !Number.isNaN(Date.parse(body.now))
       ? Date.parse(body.now)

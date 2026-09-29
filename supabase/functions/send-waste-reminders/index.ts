@@ -4,6 +4,7 @@ import rrule from 'npm:rrule@2';
 
 import { json } from '../_shared/cors.ts';
 import { expoBaseUrl, isServiceCall, sendPush } from '../_shared/expo.ts';
+import { parseRows, readJsonObject, z } from '../_shared/validate.ts';
 
 const LABELS: Record<string, string> = {
   household: 'ordures ménagères',
@@ -14,7 +15,10 @@ const LABELS: Record<string, string> = {
   green: 'déchets verts',
 };
 
-type Exception = { date: string; movedTo: string | null };
+const ExceptionSchema = z.object({ date: z.string(), movedTo: z.string().nullable() });
+type Exception = z.infer<typeof ExceptionSchema>;
+const ScheduleSchema = z.object({ zone_id: z.string(), waste_type: z.string(), rrule: z.string(), exceptions: z.array(ExceptionSchema).nullable() });
+const ReminderRecipientSchema = z.object({ push_token_id: z.string(), token: z.string() });
 
 // Paquet CommonJS : l'export par defaut porte les fonctions.
 const { rrulestr } = rrule;
@@ -30,7 +34,7 @@ function collectsOn(rrule: string, exceptions: Exception[], day: string): boolea
 
 Deno.serve(async (req) => {
   if (!isServiceCall(req)) return json({ error: 'Accès refusé' }, 401);
-  const body = (await req.json().catch(() => ({}))) as { expoUrl?: unknown; day?: unknown };
+  const body = await readJsonObject(req);
   const expo = expoBaseUrl(body.expoUrl);
   const tomorrow = typeof body.day === 'string' ? body.day : new Date(Date.now() + 86_400_000).toLocaleDateString('en-CA', { timeZone: 'Europe/Paris' });
   const admin = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '', { auth: { persistSession: false } });
@@ -38,14 +42,14 @@ Deno.serve(async (req) => {
 
   const { data: schedules } = await admin.from('waste_schedules').select('zone_id, waste_type, rrule, exceptions');
   const byZone = new Map<string, string[]>();
-  for (const s of schedules ?? []) {
-    if (collectsOn(s.rrule, (s.exceptions ?? []) as Exception[], tomorrow)) byZone.set(s.zone_id, [...(byZone.get(s.zone_id) ?? []), LABELS[s.waste_type] ?? s.waste_type]);
+  for (const s of parseRows(ScheduleSchema, schedules)) {
+    if (collectsOn(s.rrule, s.exceptions ?? [], tomorrow)) byZone.set(s.zone_id, [...(byZone.get(s.zone_id) ?? []), LABELS[s.waste_type] ?? s.waste_type]);
   }
   let messages = 0;
   let errors = 0;
   for (const [zoneId, types] of byZone) {
     const { data: recipients } = await admin.rpc('waste_reminder_recipients', { p_zone_id: zoneId });
-    const list = (recipients ?? []) as { push_token_id: string; token: string }[];
+    const list = parseRows(ReminderRecipientSchema, recipients);
     if (list.length === 0) continue;
     try {
       await sendPush(expo, list.map((r) => ({ to: r.token, title: 'Collecte demain', body: `Pensez à sortir vos bacs : ${types.join(', ')}.`, channelId: 'collecte', data: { url: '/environnement' } })));

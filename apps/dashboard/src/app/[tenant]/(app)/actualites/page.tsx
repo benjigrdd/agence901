@@ -6,6 +6,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 import { PageHeader } from '@/components/page-header';
+import { TruncationNotice } from '@/components/truncation-notice';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
@@ -168,6 +169,7 @@ export default async function NewsPage({ params, searchParams }: PageProps<'/[te
         </Button>
       </form>
 
+      <TruncationNotice shown={list.items.length} total={list.total} hint="Affinez les filtres pour retrouver un contenu plus ancien." />
       <PostsTable slug={slug} rows={rows} />
     </>
   );

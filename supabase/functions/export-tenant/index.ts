@@ -7,6 +7,7 @@ import { strToU8, zipSync } from 'npm:fflate@0.8';
 
 import { corsHeaders, json } from '../_shared/cors.ts';
 import { callerAal, callerClient, rateLimited, serviceClient, UUID } from '../_shared/caller.ts';
+import { readJsonObject } from '../_shared/validate.ts';
 
 type Table = { name: string; description: string; personal?: string[] };
 
@@ -87,10 +88,7 @@ function readme(generatedAt: string, personal: boolean, counts: Record<string, n
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
-  const body = (await req.json().catch(() => ({}))) as {
-    tenantId?: unknown;
-    includePersonalData?: unknown;
-  };
+  const body = await readJsonObject(req);
   const tenantId =
     typeof body.tenantId === 'string' && UUID.test(body.tenantId) ? body.tenantId : null;
   if (!tenantId) return json({ code: 'APP_INVALID_INPUT', error: 'Commune invalide' }, 400);

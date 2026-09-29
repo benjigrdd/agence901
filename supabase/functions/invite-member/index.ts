@@ -4,13 +4,13 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 
 import { rateLimited } from '../_shared/caller.ts';
 import { corsHeaders, json } from '../_shared/cors.ts';
+import { isRecord, readJsonObject } from '../_shared/validate.ts';
 
 const MODULES = ['news', 'events', 'reports', 'map', 'mobility', 'procedures', 'participation', 'notifications', 'services', 'environment', 'media', 'districts', 'settings', 'audit'];
 const LEVELS = ['read', 'edit', 'publish'];
 const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-type Body = { tenantId?: unknown; email?: unknown; displayName?: unknown; role?: unknown; permissions?: unknown };
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
@@ -22,14 +22,14 @@ Deno.serve(async (req) => {
   const siteUrl = Deno.env.get('SITE_URL') ?? 'http://127.0.0.1:3000';
   const authorization = req.headers.get('Authorization') ?? '';
 
-  const body = (await req.json().catch(() => ({}))) as Body;
+  const body = await readJsonObject(req);
   const tenantId = typeof body.tenantId === 'string' && UUID.test(body.tenantId) ? body.tenantId : null;
   const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
   const displayName = typeof body.displayName === 'string' ? body.displayName.trim() : '';
   const role = body.role === 'admin' || body.role === 'agent' ? body.role : null;
   const permissions: Record<string, string> = {};
-  if (body.permissions && typeof body.permissions === 'object') {
-    for (const [module, level] of Object.entries(body.permissions as Record<string, unknown>)) {
+  if (isRecord(body.permissions)) {
+    for (const [module, level] of Object.entries(body.permissions)) {
       if (MODULES.includes(module) && typeof level === 'string' && LEVELS.includes(level)) permissions[module] = level;
     }
   }

@@ -26,6 +26,15 @@ export type WeeklyHours = {
   days: Record<WeekdayKey, TimeRange[]>;
 };
 
+/** Jour d'indice `k` (0 = lundi) ; les appelants bornent `k` a la semaine. */
+function dayAt(k: number): WeekdayKey {
+  const day = WEEKDAY_KEYS[k];
+  if (!day) throw new RangeError(`Jour hors semaine : ${k}`);
+  return day;
+}
+
+const dayIndex = (value: string | undefined) => WEEKDAY_KEYS.findIndex((k) => k === value);
+
 const TIME = /^([01]\d|2[0-4]):[0-5]\d$/;
 const RANGE = /^(\d{2}:\d{2})-(\d{2}:\d{2})$/;
 
@@ -54,12 +63,12 @@ export function serializeOpeningHours(hours: WeeklyHours): string | null {
   const rules: string[] = [];
   let i = 0;
   while (i < WEEKDAY_KEYS.length) {
-    const start = WEEKDAY_KEYS[i] as WeekdayKey;
+    const start = dayAt(i);
     const key = rangesKey(hours.days[start]);
     let j = i;
-    while (j + 1 < WEEKDAY_KEYS.length && rangesKey(hours.days[WEEKDAY_KEYS[j + 1] as WeekdayKey]) === key) j++;
+    while (j + 1 < WEEKDAY_KEYS.length && rangesKey(hours.days[dayAt(j + 1)]) === key) j++;
     if (key) {
-      const end = WEEKDAY_KEYS[j] as WeekdayKey;
+      const end = dayAt(j);
       const days = j === i ? start : j === i + 1 ? `${start},${end}` : `${start}-${end}`;
       rules.push(`${days} ${key}`);
     }
@@ -72,15 +81,15 @@ function parseDays(selector: string): WeekdayKey[] | null {
   const days: WeekdayKey[] = [];
   for (const part of selector.split(',')) {
     const [a, b] = part.split('-');
-    const from = WEEKDAY_KEYS.indexOf(a as WeekdayKey);
+    const from = dayIndex(a);
     if (from < 0) return null;
     if (b === undefined) {
-      days.push(WEEKDAY_KEYS[from] as WeekdayKey);
+      days.push(dayAt(from));
       continue;
     }
-    const to = WEEKDAY_KEYS.indexOf(b as WeekdayKey);
+    const to = dayIndex(b);
     if (to < from) return null;
-    for (let k = from; k <= to; k++) days.push(WEEKDAY_KEYS[k] as WeekdayKey);
+    for (let k = from; k <= to; k++) days.push(dayAt(k));
   }
   return days;
 }

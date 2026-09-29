@@ -3,13 +3,8 @@ import 'server-only';
 import type { Repositories } from '@app/data';
 import { createRepositories } from '@app/data';
 
+import { getDataSource } from '@/lib/data-source';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
-
-export type DataSourceName = 'mock' | 'supabase';
-
-export function getDataSource(): DataSourceName {
-  return process.env.DATA_SOURCE === 'supabase' ? 'supabase' : 'mock';
-}
 
 export function isMockDataSource(): boolean {
   return getDataSource() === 'mock';

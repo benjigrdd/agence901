@@ -3,7 +3,7 @@ import type { AuditEntry } from '@app/shared';
 import { applyList, byString } from '../../list';
 import type { AuditRepository, UsageRepository } from '../../ports';
 import type { ClientResolver } from '../core';
-import { AUDIT_ENTITY_NAMES, check, requirePermission, requirePlatformAdmin, requireStaff, unwrap } from '../core';
+import { AUDIT_ENTITY_NAMES, check, requirePermission, requirePlatformAdmin, requireStaff, selectAll, unwrap } from '../core';
 import * as m from '../mappers';
 
 const TABLE_BY_ENTITY = new Map(Object.entries(AUDIT_ENTITY_NAMES).map(([table, entity]) => [entity, table]));
@@ -13,13 +13,18 @@ export function createAuditRepositories(resolve: ClientResolver): { audit: Audit
     async list(ctx, params) {
       requirePermission(ctx, 'audit', 'read');
       const f = params?.filters;
-      let query = (await resolve(ctx)).from('audit_log').select('*').eq('tenant_id', ctx.tenantId);
-      if (f?.actorId) query = query.eq('actor_id', f.actorId);
-      if (f?.entity) query = query.eq('entity', TABLE_BY_ENTITY.get(f.entity) ?? f.entity);
-      if (f?.action?.length) query = query.in('action', f.action);
-      if (f?.from) query = query.gte('at', f.from);
-      if (f?.to) query = query.lte('at', f.to);
-      const rows = unwrap(await query.order('at', { ascending: false }).limit(5000)).map(m.toAuditEntry);
+      const db = await resolve(ctx);
+      const rows = (
+        await selectAll(() => {
+          let query = db.from('audit_log').select('*').eq('tenant_id', ctx.tenantId);
+          if (f?.actorId) query = query.eq('actor_id', f.actorId);
+          if (f?.entity) query = query.eq('entity', TABLE_BY_ENTITY.get(f.entity) ?? f.entity);
+          if (f?.action?.length) query = query.in('action', f.action);
+          if (f?.from) query = query.gte('at', f.from);
+          if (f?.to) query = query.lte('at', f.to);
+          return query.order('at', { ascending: false }).order('id');
+        })
+      ).map(m.toAuditEntry);
       return applyList(rows, params, {
         searchText: (e) => `${e.entity} ${e.action} ${Object.keys(e.diff).join(' ')}`,
         sorters: { at: byString((e: AuditEntry) => e.at) },

@@ -6,7 +6,7 @@ import { ConflictError, NotFoundError, ValidationError } from '../../errors';
 import { applyList, byNumber, byString, parseInput } from '../../list';
 import type { MediaListItem, MediaRepository } from '../../ports';
 import type { ClientResolver, Db } from '../core';
-import { check, requirePermission, toDataError, unwrap } from '../core';
+import { check, requirePermission, selectAll, toDataError } from '../core';
 import * as m from '../mappers';
 
 export const PUBLIC_MEDIA_BUCKET = 'public-media';
@@ -24,17 +24,17 @@ export function createMediaRepository(resolve: ClientResolver): MediaRepository 
 
   const usageCounts = async (db: Db, ctx: DataContext): Promise<Map<string, number>> => {
     const [posts, events, places] = await Promise.all([
-      db.from('posts').select('cover_media_id').eq('tenant_id', ctx.tenantId).not('cover_media_id', 'is', null),
-      db.from('events').select('cover_media_id').eq('tenant_id', ctx.tenantId).not('cover_media_id', 'is', null),
-      db.from('places').select('photo_media_id').eq('tenant_id', ctx.tenantId).not('photo_media_id', 'is', null),
+      selectAll(() => db.from('posts').select('id, cover_media_id').eq('tenant_id', ctx.tenantId).not('cover_media_id', 'is', null).order('id')),
+      selectAll(() => db.from('events').select('id, cover_media_id').eq('tenant_id', ctx.tenantId).not('cover_media_id', 'is', null).order('id')),
+      selectAll(() => db.from('places').select('id, photo_media_id').eq('tenant_id', ctx.tenantId).not('photo_media_id', 'is', null).order('id')),
     ]);
     const counts = new Map<string, number>();
     const add = (id: string | null) => {
       if (id) counts.set(id, (counts.get(id) ?? 0) + 1);
     };
-    for (const r of unwrap(posts)) add(r.cover_media_id);
-    for (const r of unwrap(events)) add(r.cover_media_id);
-    for (const r of unwrap(places)) add(r.photo_media_id);
+    for (const r of posts) add(r.cover_media_id);
+    for (const r of events) add(r.cover_media_id);
+    for (const r of places) add(r.photo_media_id);
     return counts;
   };
 
@@ -50,9 +50,14 @@ export function createMediaRepository(resolve: ClientResolver): MediaRepository 
       requirePermission(ctx, 'media', 'read');
       const db = (await resolve(ctx));
       const mimes = params?.filters?.mime;
-      const [rows, counts] = await Promise.all([db.from('media').select('*').eq('tenant_id', ctx.tenantId), usageCounts(db, ctx)]);
-      const items: MediaListItem[] = unwrap(rows)
-        .filter((r) => !mimes?.length || mimes.includes(r.mime))
+      const [rows, counts] = await Promise.all([
+        selectAll(() => {
+          const query = db.from('media').select('*').eq('tenant_id', ctx.tenantId);
+          return (mimes?.length ? query.in('mime', mimes) : query).order('id');
+        }),
+        usageCounts(db, ctx),
+      ]);
+      const items: MediaListItem[] = rows
         .map((r) => ({ media: m.toMedia(r, publicUrl(db, r.path)), usageCount: counts.get(r.id) ?? 0 }));
       return applyList(items, params, {
         searchText: (i) => `${i.media.altText} ${i.media.credit ?? ''} ${i.media.path}`,

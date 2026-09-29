@@ -5,6 +5,7 @@ import Link from 'next/link';
 
 import { ViewSwitch } from '@/components/map/view-switch';
 import { PageHeader } from '@/components/page-header';
+import { TruncationNotice } from '@/components/truncation-notice';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -80,7 +81,8 @@ export default async function PlacesPage({ params, searchParams }: PageProps<'/[
         }
       />
       <form method="get" className="mb-4 flex flex-wrap items-end gap-3" aria-label="Filtrer les lieux">
-        {view === 'carte' ? <input type="hidden" name="vue" value="carte" /> : null}
+        <TruncationNotice shown={list.items.length} total={list.total} hint="Filtrez par catégorie ou recherchez un lieu." />
+      {view === 'carte' ? <input type="hidden" name="vue" value="carte" /> : null}
         <div className="space-y-1">
           <Label htmlFor="f-cat">Catégorie</Label>
           <select id="f-cat" name="categorie" defaultValue={categoryFilter} className="border-input bg-background h-9 rounded-md border px-3 text-sm">

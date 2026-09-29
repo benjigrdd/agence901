@@ -39,3 +39,7 @@ coverage/
 test-results/
 playwright-report/
 blob-report/
+
+# claude code (reglages locaux ; settings.json partage)
+.claude/*
+!.claude/settings.json

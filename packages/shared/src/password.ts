@@ -4,6 +4,7 @@ export const PASSWORD_MIN_LENGTH = 12;
 export type PasswordStrength = { score: 0 | 1 | 2 | 3 | 4; label: string; acceptable: boolean; hints: string[] };
 
 const LABELS = ['Très faible', 'Faible', 'Moyen', 'Bon', 'Excellent'] as const;
+const SCORES = [0, 1, 2, 3, 4] as const;
 const COMMON = ['motdepasse', 'password', 'azerty', 'qwerty', '123456', 'mairie', 'bonjour', 'soleil'];
 
 export function passwordStrength(password: string): PasswordStrength {
@@ -22,6 +23,6 @@ export function passwordStrength(password: string): PasswordStrength {
   if (classes >= 3) score++;
   if (classes === 4 && password.length >= 14) score++;
   if (common || /(.)\1{3,}/.test(password)) score = Math.max(0, score - 2);
-  const clamped = Math.min(4, score) as PasswordStrength['score'];
+  const clamped = SCORES[Math.min(4, score)] ?? 0;
   return { score: clamped, label: LABELS[clamped], acceptable: password.length >= PASSWORD_MIN_LENGTH && clamped >= 2, hints };
 }

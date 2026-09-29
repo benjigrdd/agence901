@@ -3,14 +3,27 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 
 import { json } from '../_shared/cors.ts';
 import { expoBaseUrl, fetchReceipts, isServiceCall, sendPush } from '../_shared/expo.ts';
+import { parseRows, readJsonObject, RecipientSchema, z } from '../_shared/validate.ts';
 
-type Recipient = { pushTokenId: string; token: string };
-type DueNotification = { id: string; title: string; body: string; channel: string; url: string | null; recipients: Recipient[] };
-type OutboxItem = { id: string; kind: string; payload: { reportId?: string; reference?: string; message?: string | null }; tokens: Recipient[] };
+const DueNotificationSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  body: z.string(),
+  channel: z.string(),
+  url: z.string().nullable(),
+  recipients: z.array(RecipientSchema),
+});
+const OutboxItemSchema = z.object({
+  id: z.string(),
+  kind: z.string(),
+  payload: z.object({ reportId: z.string().optional(), reference: z.string().optional(), message: z.string().nullable().optional() }),
+  tokens: z.array(RecipientSchema),
+});
+const PendingReceiptSchema = z.object({ delivery_id: z.string(), ticket_id: z.string() });
 
 Deno.serve(async (req) => {
   if (!isServiceCall(req)) return json({ error: 'Accès refusé' }, 401);
-  const body = (await req.json().catch(() => ({}))) as { expoUrl?: unknown; now?: unknown };
+  const body = await readJsonObject(req);
   const expo = expoBaseUrl(body.expoUrl);
   const admin = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '', { auth: { persistSession: false } });
   const run = await admin.from('job_runs').insert({ job: 'dispatch-notifications' }).select('id').single();
@@ -18,7 +31,7 @@ Deno.serve(async (req) => {
 
   // 1. Notifications dues (ciblees, alertes, programmees).
   const claimed = await admin.rpc('claim_due_notifications', { p_limit: 20, ...(typeof body.now === 'string' ? { p_now: body.now } : {}) });
-  for (const n of (claimed.data ?? []) as DueNotification[]) {
+  for (const n of parseRows(DueNotificationSchema, claimed.data)) {
     try {
       const tickets = await sendPush(
         expo,
@@ -36,7 +49,7 @@ Deno.serve(async (req) => {
 
   // 2. Suivi des signalements (messages publics du personnel).
   const outbox = await admin.rpc('claim_outbox', { p_limit: 100 });
-  for (const item of (outbox.data ?? []) as OutboxItem[]) {
+  for (const item of parseRows(OutboxItemSchema, outbox.data)) {
     if (item.tokens.length === 0) continue;
     try {
       await sendPush(
@@ -57,7 +70,7 @@ Deno.serve(async (req) => {
 
   // 3. Accuses de reception (jetons desinscrits → invalides).
   const pending = await admin.rpc('pending_receipts', { p_limit: 300 });
-  const rows = (pending.data ?? []) as { delivery_id: string; ticket_id: string }[];
+  const rows = parseRows(PendingReceiptSchema, pending.data);
   if (rows.length) {
     const receipts = await fetchReceipts(expo, rows.map((r) => r.ticket_id));
     await admin.rpc('record_receipts', {

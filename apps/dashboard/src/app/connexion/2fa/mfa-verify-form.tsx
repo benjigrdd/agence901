@@ -27,6 +27,7 @@ export function MfaVerifyForm({ next }: { next: string }) {
             className="w-40 font-mono text-lg tracking-widest"
             aria-describedby={state?.error ? 'code-erreur' : undefined}
             aria-invalid={state?.error ? true : undefined}
+            // eslint-disable-next-line jsx-a11y/no-autofocus -- page a champ unique, attendue juste apres la connexion
             autoFocus
           />
         </div>

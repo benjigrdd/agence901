@@ -19,6 +19,7 @@ import Link from 'next/link';
 
 import { CsvImportDialog } from '@/components/csv-import/csv-import-dialog';
 import { PageHeader } from '@/components/page-header';
+import { TruncationNotice } from '@/components/truncation-notice';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { requirePermission } from '@/server/guards';
@@ -62,7 +63,8 @@ export default async function AgendaPage({ params, searchParams }: PageProps<'/[
     ...(from ? { from: parisInputToIso(`${from}T00:00`) ?? undefined } : {}),
     ...(to ? { to: parisInputToIso(`${to}T23:59`) ?? undefined } : {}),
   };
-  const [{ items }, feed] = await Promise.all([repos.events.list(ctx, { filters, pageSize: 500, sort: { field: 'startsAt', direction: 'asc' } }), repos.citizen.publicFeed(ctx)]);
+  const [list, feed] = await Promise.all([repos.events.list(ctx, { filters, pageSize: 500, sort: { field: 'startsAt', direction: 'asc' } }), repos.citizen.publicFeed(ctx)]);
+  const { items } = list;
   const placeNames = new Map(feed.places.map((p) => [p.id, p.name]));
 
   const base = `/${slug}/agenda`;
@@ -125,6 +127,7 @@ export default async function AgendaPage({ params, searchParams }: PageProps<'/[
         }
       />
 
+      <TruncationNotice shown={items.length} total={list.total} hint="Affinez les filtres pour retrouver un événement." />
       <form method="get" className="mb-4 flex flex-wrap items-end gap-3">
         <input type="hidden" name="vue" value={view} />
         {view === 'calendrier' ? <input type="hidden" name="mois" value={month} /> : null}

@@ -2,6 +2,7 @@ import { can, formatDateFr, NOTIFICATION_TARGET_TYPE_LABELS } from '@app/shared'
 import type { Metadata } from 'next';
 
 import { PageHeader } from '@/components/page-header';
+import { TruncationNotice } from '@/components/truncation-notice';
 import { requirePermission } from '@/server/guards';
 import { getRepos } from '@/server/repos';
 
@@ -60,6 +61,7 @@ export default async function NotificationsPage({ params }: PageProps<'/[tenant]
           <h2 id="historique" className="text-lg font-semibold">
             Historique
           </h2>
+          <TruncationNotice shown={list.items.length} total={list.total} hint="Les notifications les plus anciennes ne sont pas affichées." />
           <NotificationsTable rows={rows} />
         </section>
       </div>

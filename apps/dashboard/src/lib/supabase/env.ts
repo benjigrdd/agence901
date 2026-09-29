@@ -1,3 +1,5 @@
+import { getDataSource } from '../data-source';
+
 /** Configuration publique de Supabase (URL et cle anonyme / publishable). La cle `service_role` n'est jamais utilisee ici. */
 export function supabaseUrl(): string {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -12,5 +14,5 @@ export function supabasePublicKey(): string {
 }
 
 export function isSupabaseMode(): boolean {
-  return process.env.DATA_SOURCE === 'supabase';
+  return getDataSource() === 'supabase';
 }

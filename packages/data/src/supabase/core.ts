@@ -100,6 +100,27 @@ export function unwrap<T>(result: { data: T; error: PgError | null }): NonNullab
   return result.data;
 }
 
+/** Taille des lots de lecture : ne doit pas depasser `max_rows` de PostgREST (1 000, supabase/config.toml). */
+export const FETCH_CHUNK = 1000;
+
+/**
+ * Lit toutes les lignes d'une requete par lots successifs. PostgREST tronque sans erreur au-dela de
+ * `max_rows` : toute lecture non bornee d'une table qui grandit passe par ici. La requete doit etre
+ * triee sur une colonne unique (souvent `id` en dernier critere) pour que les lots ne se chevauchent pas.
+ */
+export async function selectAll<T>(
+  query: () => { range(from: number, to: number): PromiseLike<{ data: T[] | null; error: PgError | null }> },
+): Promise<T[]> {
+  const rows: T[] = [];
+  for (let from = 0; ; from += FETCH_CHUNK) {
+    const { data, error } = await query().range(from, from + FETCH_CHUNK - 1);
+    if (error) throw toDataError(error);
+    const chunk = data ?? [];
+    rows.push(...chunk);
+    if (chunk.length < FETCH_CHUNK) return rows;
+  }
+}
+
 export function check(result: { error: PgError | null }): void {
   if (result.error) throw toDataError(result.error);
 }

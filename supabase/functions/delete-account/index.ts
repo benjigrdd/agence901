@@ -23,6 +23,8 @@ Deno.serve(async (req) => {
 
   const anonymized = await admin.rpc('anonymize_citizen', { p_user_id: user.id });
   if (anonymized.error) return json({ code: 'APP_DELETE_FAILED', error: 'Suppression impossible' }, 500);
+  // Si la suppression Auth echoue, l'habitant peut reessayer : son jeton reste valide et `anonymize_citizen`
+  // est idempotent.
   const deleted = await admin.auth.admin.deleteUser(user.id);
   if (deleted.error) return json({ code: 'APP_DELETE_FAILED', error: 'Suppression impossible' }, 500);
   return json({ deleted: true });

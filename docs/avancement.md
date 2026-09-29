@@ -73,14 +73,11 @@
 
 ### Points en attente
 
-- `apps/mobile/app.config.ts` et `apps/mobile/src/app/index.tsx` : écriture refusée par le
-  classifieur de permissions de Claude Code ; à créer (contenu prévu : config Expo statique et
-  écran affichant `PRODUCT_NAME_FALLBACK`). Tant qu'ils manquent, `pnpm --filter mobile typecheck`
-  échoue.
-- `apps/dashboard/eslint.config.mjs` : garder la config générée par Next ou la remplacer par
-  `export { default } from '@app/config/eslint/next';` (ajoute toutes les règles jsx-a11y).
-  Modification bloquée par le hook `config-protection` du plugin ecc.
-- `.npmrc` non créé (bloqué) : `nodeLinker: hoisted` est dans `pnpm-workspace.yaml`, équivalent.
+- Soldés (correctifs d'audit du 2026-09-28) : `apps/mobile/app.config.ts` et `src/app/index.tsx` créés,
+  `pnpm --filter mobile typecheck` passe. `.npmrc` inutile (`nodeLinker: hoisted` dans `pnpm-workspace.yaml`).
+- `apps/dashboard/eslint.config.mjs` : à remplacer par `export { default } from '@app/config/eslint/next';`
+  (règles jsx-a11y complètes). Le code passe déjà cette configuration ; seule l'écriture du fichier reste
+  bloquée par le hook `config-protection` du plugin ecc.
 
 ## Lot 04 — Actualités, Agenda, Médiathèque
 
@@ -303,3 +300,18 @@ branchés) et un compte Expo/EAS pour créer les projets, construire et publier.
 - Écarts : Sentry mobile non intégré (app mobile à développer) ; restauration faite en « données seules »
   sur un schéma recréé par les migrations (procédure recommandée par Supabase) plutôt qu'en restauration
   brute du dump dans une image Postgres, incompatible avec le schéma `auth`.
+
+## Correctifs d'audit (2026-09-28)
+
+- CI : typecheck mobile réparé (écran provisoire, `app.config.ts` statique).
+- Sécurité : `DATA_SOURCE` en échec fermé (`src/lib/data-source.ts`, vérifié au démarrage dans
+  `instrumentation.ts`, 5 tests) ; E2E sur mock avec `ALLOW_MOCK_DATA=1`. Voir ADR-018.
+- Données : plus de troncature silencieuse à 1 000 lignes (`selectAll` dans l'adaptateur Supabase, filtres
+  en SQL, photos signées pour la page seule) ; exports audit et signalements et usage super-admin complets
+  (`listAll`) ; avis « Affichage des N premiers résultats sur M » sur les listes. Test Supabase
+  `large-lists.test.ts` (1 050 entrées d'audit, deux pages sans doublon).
+- Accessibilité : code conforme aux règles jsx-a11y complètes (textes alternatifs, autofocus justifié,
+  groupe de saisie).
+- Typage : casts `as` retirés de `@app/shared`, de l'éditeur d'événement et des Edge Functions
+  (`_shared/validate.ts` : zod pour nos RPC, éléments invalides ignorés pour les API externes).
+

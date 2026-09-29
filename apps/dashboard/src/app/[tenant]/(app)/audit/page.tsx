@@ -3,10 +3,12 @@ import { Download } from 'lucide-react';
 import type { Metadata } from 'next';
 
 import { PageHeader } from '@/components/page-header';
+import { TruncationNotice } from '@/components/truncation-notice';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { authorNames } from '@/server/content';
 import { requireTenantAdmin } from '@/server/guards';
+import { listAll } from '@/server/list-all';
 import { getRepos } from '@/server/repos';
 
 import type { AuditRow } from './audit-table';
@@ -22,9 +24,13 @@ export default async function AuditPage({ params, searchParams }: PageProps<'/[t
   const { ctx } = await requireTenantAdmin(slug);
   const { values, filters, qs } = parseAuditFilters(await searchParams);
   const repos = getRepos();
-  const [list, all, names] = await Promise.all([repos.audit.list(ctx, { filters, pageSize: 500 }), repos.audit.list(ctx, { pageSize: 1000 }), authorNames(ctx)]);
-  const entities = [...new Set(all.items.map((a) => a.entity))].sort();
-  const actors = [...new Set(all.items.map((a) => a.actorId))];
+  const [list, all, names] = await Promise.all([
+    repos.audit.list(ctx, { filters, pageSize: 500 }),
+    listAll((page, pageSize) => repos.audit.list(ctx, { page, pageSize })),
+    authorNames(ctx),
+  ]);
+  const entities = [...new Set(all.map((a) => a.entity))].sort();
+  const actors = [...new Set(all.map((a) => a.actorId))];
   const rows: AuditRow[] = list.items.map((a) => ({
     id: a.id,
     at: a.at,
@@ -96,6 +102,7 @@ export default async function AuditPage({ params, searchParams }: PageProps<'/[t
           Filtrer
         </Button>
       </form>
+      <TruncationNotice shown={list.items.length} total={list.total} hint="Affinez la période ou exportez le journal en CSV pour tout consulter." />
       <AuditTable rows={rows} />
     </>
   );

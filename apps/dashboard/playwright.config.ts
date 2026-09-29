@@ -23,6 +23,7 @@ export default defineConfig({
     // `pnpm start` ne relaie pas toujours SIGTERM a Next : arret explicite en fin de suite.
     gracefulShutdown: { signal: 'SIGINT', timeout: 2000 },
     timeout: 300_000,
-    env: { DATA_SOURCE: 'mock' },
+    // Build de production sur le mock : autorisation explicite (voir src/lib/data-source.ts).
+    env: { DATA_SOURCE: 'mock', ALLOW_MOCK_DATA: '1' },
   },
 });

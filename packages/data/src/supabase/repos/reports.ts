@@ -15,10 +15,13 @@ import { z } from 'zod';
 import type { DataContext } from '../../context';
 import { ForbiddenError, NotFoundError, ValidationError } from '../../errors';
 import { applyList, byNumber, byString, parseInput } from '../../list';
-import type { ReportDetail, ReportListItem, ReportsRepository, ReportStats } from '../../ports';
+import type { ReportDetail, ReportFilters, ReportListItem, ReportsRepository, ReportStats } from '../../ports';
 import type { ClientResolver, Db } from '../core';
-import { check, requirePermission, unwrap, validated } from '../core';
+import { check, requirePermission, selectAll, unwrap, validated } from '../core';
+import type { Database } from '../database.types';
 import * as m from '../mappers';
+
+type ReportRow = Database['public']['Views']['v_reports']['Row'];
 
 export const REPORT_PHOTOS_BUCKET = 'report-photos';
 
@@ -42,24 +45,39 @@ export function createReportsRepository(resolve: ClientResolver): ReportsReposit
   const slaByCategory = async (db: Db, ctx: DataContext): Promise<Map<string, number>> =>
     new Map(unwrap(await db.from('report_categories').select('id, sla_days').eq('tenant_id', ctx.tenantId)).map((c) => [c.id, c.sla_days]));
 
-  const loadReports = async (ctx: DataContext, ids?: string[]): Promise<{ reports: Report[]; items: ReportListItem[] }> => {
-    const db = (await resolve(ctx));
-    const query = db.from('v_reports').select('*').eq('tenant_id', ctx.tenantId);
-    const rows = unwrap(ids ? await query.in('id', ids) : await query);
+  /** Lignes filtrees en base (filtres simples), lues par lots : jamais tronquees par `max_rows`. */
+  const loadRows = async (db: Db, ctx: DataContext, opts: { ids?: string[]; filters?: ReportFilters | undefined }): Promise<ReportRow[]> => {
+    const f = opts.filters;
+    return selectAll(() => {
+      let query = db.from('v_reports').select('*').eq('tenant_id', ctx.tenantId);
+      if (opts.ids) query = query.in('id', opts.ids);
+      if (f?.status?.length) query = query.in('status', f.status);
+      if (f?.categoryId?.length) query = query.in('category_id', f.categoryId);
+      if (f?.serviceId?.length) query = query.in('service_id', f.serviceId);
+      if (f?.priority?.length) query = query.in('priority', f.priority);
+      if (f?.from) query = query.gte('created_at', f.from);
+      if (f?.to) query = query.lte('created_at', f.to);
+      return query.order('id');
+    });
+  };
+
+  /** Photos signees uniquement pour les signalements renvoyes (une page, pas toute la commune). */
+  const toItems = async (db: Db, ctx: DataContext, rows: ReportRow[]): Promise<ReportListItem[]> => {
     const [urls, sla] = await Promise.all([signedPhotos(db, rows.flatMap((r) => r.photo_paths ?? [])), slaByCategory(db, ctx)]);
     const now = new Date();
-    const reports = rows.map((r) => m.toReport(r, (r.photo_paths ?? []).flatMap((p) => urls.get(p) ?? [])));
-    const items = reports.map((report) => ({
-      report,
-      ageDays: reportAgeDays(report.createdAt, now),
-      overdue: isReportOverdue(report, sla.get(report.categoryId) ?? DEFAULT_SLA_DAYS, now),
-    }));
-    return { reports, items };
+    return rows.map((r) => {
+      const report = m.toReport(r, (r.photo_paths ?? []).flatMap((p) => urls.get(p) ?? []));
+      return { report, ageDays: reportAgeDays(report.createdAt, now), overdue: isReportOverdue(report, sla.get(report.categoryId) ?? DEFAULT_SLA_DAYS, now) };
+    });
+  };
+
+  const loadReports = async (ctx: DataContext, ids: string[]): Promise<ReportListItem[]> => {
+    const db = await resolve(ctx);
+    return toItems(db, ctx, await loadRows(db, ctx, { ids }));
   };
 
   const detail = async (ctx: DataContext, id: string): Promise<ReportDetail> => {
-    const { items } = await loadReports(ctx, [id]);
-    const item = items[0];
+    const item = (await loadReports(ctx, [id]))[0];
     if (!item) throw new NotFoundError('Signalement introuvable');
     const events = unwrap(await (await resolve(ctx)).from('report_events').select('*').eq('tenant_id', ctx.tenantId).eq('report_id', id).order('created_at')).map(m.toReportEvent);
     return { ...item, events, reporterAlias: item.report.reporterId ? pseudonymizeReporter(item.report.reporterId) : null };
@@ -69,36 +87,35 @@ export function createReportsRepository(resolve: ClientResolver): ReportsReposit
     async list(ctx, params) {
       requirePermission(ctx, 'reports', 'read');
       const f = params?.filters;
+      const db = await resolve(ctx);
       let inDistrict: Set<string> | null = null;
       if (f?.districtId) {
-        const db = (await resolve(ctx));
         const district = (await db.from('districts').select('id').eq('tenant_id', ctx.tenantId).eq('id', f.districtId).maybeSingle()).data;
         if (!district) throw new ValidationError('Quartier inconnu');
         inDistrict = new Set(unwrap(await db.rpc('report_ids_in_district', { p_district_id: f.districtId })));
       }
-      const { items } = await loadReports(ctx);
-      const rows = items.filter(
-        ({ report: r, overdue }) =>
-          (!f?.status?.length || f.status.includes(r.status)) &&
-          (!f?.categoryId?.length || f.categoryId.includes(r.categoryId)) &&
-          (!f?.serviceId?.length || (r.serviceId !== null && f.serviceId.includes(r.serviceId))) &&
-          (!f?.priority?.length || f.priority.includes(r.priority)) &&
-          (!f?.from || r.createdAt >= f.from) &&
-          (!f?.to || r.createdAt <= f.to) &&
-          (!inDistrict || inDistrict.has(r.id)) &&
-          (!f?.overdueOnly || overdue),
-      );
-      return applyList(rows, params, {
+      // Tri par priorite puis anciennete et filtre « en retard » (delai de la categorie) : calcules ici,
+      // sur des lignes legeres (sans photos), comme dans l'adaptateur mock.
+      const [rows, sla] = await Promise.all([loadRows(db, ctx, { filters: f }), slaByCategory(db, ctx)]);
+      const now = new Date();
+      const light = rows
+        .map((r) => {
+          const report = m.toReport(r, []);
+          return { row: r, report, ageDays: reportAgeDays(report.createdAt, now), overdue: isReportOverdue(report, sla.get(report.categoryId) ?? DEFAULT_SLA_DAYS, now) };
+        })
+        .filter((i) => (!inDistrict || inDistrict.has(i.report.id)) && (!f?.overdueOnly || i.overdue));
+      const page = applyList(light, params, {
         searchText: (i) => `${i.report.reference} ${i.report.address} ${i.report.description}`,
         sorters: {
           priority: (a, b) => REPORT_PRIORITY_RANK[a.report.priority] - REPORT_PRIORITY_RANK[b.report.priority] || b.ageDays - a.ageDays,
-          age: byNumber((i: ReportListItem) => i.ageDays),
-          createdAt: byString((i: ReportListItem) => i.report.createdAt),
-          reference: byString((i: ReportListItem) => i.report.reference),
-          status: byString((i: ReportListItem) => i.report.status),
+          age: byNumber((i: { ageDays: number }) => i.ageDays),
+          createdAt: byString((i: { report: Report }) => i.report.createdAt),
+          reference: byString((i: { report: Report }) => i.report.reference),
+          status: byString((i: { report: Report }) => i.report.status),
         },
         defaultSort: { field: 'priority', direction: 'desc' },
       });
+      return { items: await toItems(db, ctx, page.items.map((i) => i.row)), total: page.total };
     },
 
     async get(ctx, id) {
@@ -159,8 +176,8 @@ export function createReportsRepository(resolve: ClientResolver): ReportsReposit
       await detail(ctx, reportId);
       const rows = unwrap(await (await resolve(ctx)).rpc('reports_nearby', { p_report_id: reportId, p_radius_m: radiusM }));
       if (rows.length === 0) return [];
-      const { reports } = await loadReports(ctx, rows.map((r) => r.report_id));
-      const byId = new Map(reports.map((r) => [r.id, r]));
+      const items = await loadReports(ctx, rows.map((r) => r.report_id));
+      const byId = new Map(items.map((i) => [i.report.id, i.report]));
       return rows.flatMap((r) => {
         const report = byId.get(r.report_id);
         return report ? [{ report, distanceM: r.distance_m }] : [];
