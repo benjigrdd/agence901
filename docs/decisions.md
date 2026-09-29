@@ -164,3 +164,12 @@ dans l'adaptateur, à l'identique du mock ; les photos ne sont signées que pour
 exports et agrégats parcourent toutes les pages (`listAll`), et une liste affichée partiellement le dit
 (`TruncationNotice`). À reconsidérer si une commune dépasse ~20 000 lignes sur une même liste : colonnes
 de recherche `unaccent` générées, tri en SQL et pagination par `range` avec `count`.
+
+## ADR-019 — App mobile minimale avant les lots 08–10
+
+Pour disposer tôt d'une app utilisable, une version réduite est livrée : navigation en pile Expo Router
+(pas d'onglets, aucune dépendance de navigation supplémentaire), composants `StyleSheet` maison aux
+couleurs de la marque, accès aux données par `@app/data` comme le dashboard. Pas de géolocalisation ni
+de carte : l'adresse est géocodée par l'API Adresse, avec repli au centre de la commune signalé comme
+approximatif. Ces choix sont provisoires ; les lots 08–10 les remplaceront (onglets, carte MapLibre,
+photos, push, hors ligne).

@@ -9,7 +9,7 @@
 | 05 | Signalements, Carte, Quartiers | Terminé |
 | 06 | Accueil, Notifications, Environnement, Démarches, Paramètres, Audit | Terminé |
 | 07 | Super-admin | Terminé |
-| 08–10 | App mobile | Reporté (l'app sera branchée après les lots 11–14) |
+| 08–10 | App mobile | Version minimale (voir « App mobile minimale ») ; lots complets à reprendre |
 | 11 | Supabase : schéma | Terminé |
 | 12 | RLS, stockage, tests d'isolation | Terminé |
 | 13 | Auth du personnel, 2FA, invitations | Terminé |
@@ -315,3 +315,16 @@ branchés) et un compte Expo/EAS pour créer les projets, construire et publier.
 - Typage : casts `as` retirés de `@app/shared`, de l'éditeur d'événement et des Edge Functions
   (`_shared/validate.ts` : zod pour nos RPC, éléments invalides ignorés pour les API externes).
 
+## App mobile minimale (2026-09-29)
+
+Version volontairement réduite, pour avoir une app qui fonctionne en attendant les lots 08–10 complets.
+- Écrans : accueil aux couleurs de la commune, actualités (liste et détail), agenda, signaler un problème
+  (catégorie, description, adresse via l'API Adresse restreinte au code INSEE, repli « position
+  approximative » au centre de la commune), mes signalements (événements publics), démarches (lien,
+  téléphone, email), mes données (explication et suppression RGPD).
+- Données : `@app/data` uniquement (`src/lib/data.ts`) ; mock par défaut, Supabase avec
+  `EXPO_PUBLIC_DATA_SOURCE=supabase` (session anonyme persistée dans AsyncStorage) ; commune fixée par
+  `EXPO_PUBLIC_TENANT_SLUG`. Signalement idempotent (`clientRequestId` généré à l'ouverture du formulaire).
+- Vérifié sur le web (Expo, 375 px) : parcours complet de signalement jusqu'à « Mes signalements ».
+- Absent : photos, carte, notifications push, préférences, hors ligne, environnement, marque blanche
+  par commune (`tenants/<slug>/`), mention ODbL (aucune fiche lieu), build EAS (lot 18).
