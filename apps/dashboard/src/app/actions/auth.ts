@@ -1,6 +1,7 @@
 'use server';
 
 import { PASSWORD_MIN_LENGTH, passwordStrength } from '@app/shared';
+import type { EmailOtpType } from '@supabase/supabase-js';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
@@ -8,7 +9,11 @@ import { isSupabaseMode } from '@/lib/supabase/env';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { safeNextPath } from '@/lib/safe-redirect';
 
-export type FormState = { error?: string; fieldErrors?: Record<string, string>; message?: string } | null;
+export type FormState = {
+  error?: string;
+  fieldErrors?: Record<string, string>;
+  message?: string;
+} | null;
 
 const GENERIC_LOGIN_ERROR = 'Identifiants incorrects';
 
@@ -39,7 +44,11 @@ export async function signInAction(_prev: FormState, formData: FormData): Promis
   const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
   const next = encodeURIComponent(safeNext(formData.get('next')));
   // Sans appareil 2FA verifie : configuration obligatoire avant tout acces.
-  redirect(aal?.nextLevel === 'aal2' ? `/connexion/2fa?next=${next}` : `/connexion/2fa/configurer?next=${next}`);
+  redirect(
+    aal?.nextLevel === 'aal2'
+      ? `/connexion/2fa?next=${next}`
+      : `/connexion/2fa/configurer?next=${next}`,
+  );
 }
 
 export async function verifyMfaAction(_prev: FormState, formData: FormData): Promise<FormState> {
@@ -66,19 +75,31 @@ export async function startEnrollmentAction(): Promise<Enrollment> {
   const supabase = await createSupabaseServerClient();
   const { data: factors } = await supabase.auth.mfa.listFactors();
   for (const f of factors?.all ?? []) {
-    if (f.factor_type === 'totp' && f.status !== 'verified') await supabase.auth.mfa.unenroll({ factorId: f.id });
+    if (f.factor_type === 'totp' && f.status !== 'verified')
+      await supabase.auth.mfa.unenroll({ factorId: f.id });
   }
   const count = (factors?.totp ?? []).length;
-  const { data, error } = await supabase.auth.mfa.enroll({ factorType: 'totp', friendlyName: `Appareil ${count + 1} (${new Date().toISOString().slice(0, 10)})` });
-  if (error || !data) return { error: 'Impossible de préparer la double authentification. Réessayez.' };
+  const { data, error } = await supabase.auth.mfa.enroll({
+    factorType: 'totp',
+    friendlyName: `Appareil ${count + 1} (${new Date().toISOString().slice(0, 10)})`,
+  });
+  if (error || !data)
+    return { error: 'Impossible de préparer la double authentification. Réessayez.' };
   return { factorId: data.id, qrCode: data.totp.qr_code, secret: data.totp.secret };
 }
 
-export async function confirmEnrollmentAction(factorId: string, code: string, next: string): Promise<{ error: string } | void> {
+export async function confirmEnrollmentAction(
+  factorId: string,
+  code: string,
+  next: string,
+): Promise<{ error: string } | void> {
   assertSupabase();
   if (!/^\d{6}$/.test(code.replace(/\s/g, ''))) return { error: 'Le code comporte 6 chiffres' };
   const supabase = await createSupabaseServerClient();
-  const { error } = await supabase.auth.mfa.challengeAndVerify({ factorId, code: code.replace(/\s/g, '') });
+  const { error } = await supabase.auth.mfa.challengeAndVerify({
+    factorId,
+    code: code.replace(/\s/g, ''),
+  });
   if (error) return { error: 'Code incorrect ou expiré' };
   redirect(safeNext(next));
 }
@@ -88,28 +109,43 @@ export async function removeFactorAction(factorId: string): Promise<{ error?: st
   const supabase = await createSupabaseServerClient();
   const { data: factors } = await supabase.auth.mfa.listFactors();
   const verified = (factors?.totp ?? []).filter((f) => f.status === 'verified');
-  if (verified.length <= 1) return { error: 'Gardez au moins un appareil de double authentification' };
+  if (verified.length <= 1)
+    return { error: 'Gardez au moins un appareil de double authentification' };
   const { error } = await supabase.auth.mfa.unenroll({ factorId });
   return error ? { error: 'Suppression impossible' } : {};
 }
 
-export async function requestPasswordResetAction(_prev: FormState, formData: FormData): Promise<FormState> {
+export async function requestPasswordResetAction(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
   assertSupabase();
   const email = String(formData.get('email') ?? '').trim();
   if (!email) return { fieldErrors: { email: 'Saisissez votre email' } };
   const supabase = await createSupabaseServerClient();
-  await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${await siteOrigin()}/auth/confirm?next=/reinitialiser` });
+  await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${await siteOrigin()}/auth/confirm?next=/reinitialiser`,
+  });
   // Toujours le meme message : on ne revele pas si le compte existe.
-  return { message: 'Si un compte correspond à cette adresse, un email vient de vous être envoyé.' };
+  return {
+    message: 'Si un compte correspond à cette adresse, un email vient de vous être envoyé.',
+  };
 }
 
 function checkNewPassword(formData: FormData): FormState {
   const password = String(formData.get('password') ?? '');
   const confirm = String(formData.get('confirm') ?? '');
   const strength = passwordStrength(password);
-  if (password.length < PASSWORD_MIN_LENGTH) return { fieldErrors: { password: `${PASSWORD_MIN_LENGTH} caractères minimum` } };
-  if (!strength.acceptable) return { fieldErrors: { password: `Mot de passe trop faible : ${strength.hints.join(', ').toLowerCase()}` } };
-  if (password !== confirm) return { fieldErrors: { confirm: 'Les deux mots de passe ne correspondent pas' } };
+  if (password.length < PASSWORD_MIN_LENGTH)
+    return { fieldErrors: { password: `${PASSWORD_MIN_LENGTH} caractères minimum` } };
+  if (!strength.acceptable)
+    return {
+      fieldErrors: {
+        password: `Mot de passe trop faible : ${strength.hints.join(', ').toLowerCase()}`,
+      },
+    };
+  if (password !== confirm)
+    return { fieldErrors: { confirm: 'Les deux mots de passe ne correspondent pas' } };
   return null;
 }
 
@@ -128,13 +164,18 @@ export async function setPasswordAction(_prev: FormState, formData: FormData): P
   redirect('/connexion/2fa');
 }
 
-export async function changePasswordAction(_prev: FormState, formData: FormData): Promise<FormState> {
+export async function changePasswordAction(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
   assertSupabase();
   const invalid = checkNewPassword(formData);
   if (invalid) return invalid;
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase.auth.updateUser({ password: String(formData.get('password')) });
-  return error ? { error: 'Modification impossible. Reconnectez-vous puis réessayez.' } : { message: 'Mot de passe modifié' };
+  return error
+    ? { error: 'Modification impossible. Reconnectez-vous puis réessayez.' }
+    : { message: 'Mot de passe modifié' };
 }
 
 export async function signOutEverywhereAction(): Promise<void> {
@@ -143,4 +184,32 @@ export async function signOutEverywhereAction(): Promise<void> {
     await supabase.auth.signOut({ scope: 'global' });
   }
   redirect('/connexion');
+}
+
+const EMAIL_LINK_TYPES: EmailOtpType[] = [
+  'invite',
+  'recovery',
+  'email',
+  'signup',
+  'magiclink',
+  'email_change',
+];
+
+/**
+ * Liens des emails (invitation, reinitialisation), valides au clic sur « Continuer » et non a l'ouverture :
+ * les robots qui analysent les liens (messageries, antivirus) ne consomment plus le jeton a usage unique.
+ */
+export async function confirmEmailLinkAction(formData: FormData): Promise<void> {
+  assertSupabase();
+  const tokenHash = String(formData.get('token_hash') ?? '');
+  const type = EMAIL_LINK_TYPES.find((t) => t === formData.get('type'));
+  const code = String(formData.get('code') ?? '');
+  const supabase = await createSupabaseServerClient();
+  const ok =
+    tokenHash && type
+      ? !(await supabase.auth.verifyOtp({ type, token_hash: tokenHash })).error
+      : code
+        ? !(await supabase.auth.exchangeCodeForSession(code)).error
+        : false;
+  redirect(ok ? safeNext(formData.get('next')) : '/connexion?erreur=lien');
 }

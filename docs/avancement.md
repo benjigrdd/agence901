@@ -328,3 +328,5 @@ Version volontairement réduite, pour avoir une app qui fonctionne en attendant 
 - Vérifié sur le web (Expo, 375 px) : parcours complet de signalement jusqu'à « Mes signalements ».
 - Absent : photos, carte, notifications push, préférences, hors ligne, environnement, marque blanche
   par commune (`tenants/<slug>/`), mention ODbL (aucune fiche lieu), build EAS (lot 18).
+- Liens des emails (invitation, réinitialisation) : `/auth/confirm` ne consomme plus le jeton à l'ouverture
+  mais au clic sur « Continuer » (les robots de messagerie grillaient les liens à usage unique).
