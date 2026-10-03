@@ -36,7 +36,7 @@ export function MfaVerifyForm({ next }: { next: string }) {
             {state.error}
           </p>
         ) : null}
-        <Button type="submit" disabled={pending}>
+        <Button type="submit" className="h-10 w-full" disabled={pending}>
           Valider
         </Button>
       </form>

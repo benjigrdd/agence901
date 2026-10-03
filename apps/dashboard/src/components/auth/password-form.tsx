@@ -20,7 +20,7 @@ export function PasswordForm({ action, submitLabel, mode = 'reset' }: Props) {
   const [password, setPassword] = useState('');
   const strength = passwordStrength(password);
   return (
-    <form action={formAction} className="mt-6 max-w-sm space-y-4" noValidate>
+    <form action={formAction} className="mt-6 space-y-4" noValidate>
       <input type="hidden" name="mode" value={mode} />
       <div className="space-y-1">
         <Label htmlFor="password">Nouveau mot de passe</Label>
@@ -38,7 +38,16 @@ export function PasswordForm({ action, submitLabel, mode = 'reset' }: Props) {
           {PASSWORD_MIN_LENGTH} caractères minimum. Une phrase de passe est idéale.
         </p>
         <div className="flex items-center gap-2" id="password-force" aria-live="polite">
-          <meter min={0} max={4} low={2} high={3} optimum={4} value={strength.score} className="h-2 w-32" aria-label="Robustesse du mot de passe" />
+          <meter
+            min={0}
+            max={4}
+            low={2}
+            high={3}
+            optimum={4}
+            value={strength.score}
+            className="h-2 w-32"
+            aria-label="Robustesse du mot de passe"
+          />
           <span className="text-sm">Robustesse : {password ? strength.label : '—'}</span>
         </div>
         {state?.fieldErrors?.password ? (
@@ -49,7 +58,13 @@ export function PasswordForm({ action, submitLabel, mode = 'reset' }: Props) {
       </div>
       <div className="space-y-1">
         <Label htmlFor="confirm">Confirmez le mot de passe</Label>
-        <Input id="confirm" name="confirm" type="password" autoComplete="new-password" aria-invalid={state?.fieldErrors?.confirm ? true : undefined} />
+        <Input
+          id="confirm"
+          name="confirm"
+          type="password"
+          autoComplete="new-password"
+          aria-invalid={state?.fieldErrors?.confirm ? true : undefined}
+        />
         {state?.fieldErrors?.confirm ? (
           <p role="alert" className="text-destructive text-sm">
             {state.fieldErrors.confirm}
@@ -66,7 +81,7 @@ export function PasswordForm({ action, submitLabel, mode = 'reset' }: Props) {
           {state.message}
         </p>
       ) : null}
-      <Button type="submit" disabled={pending}>
+      <Button type="submit" className="h-10 w-full" disabled={pending}>
         {submitLabel}
       </Button>
     </form>

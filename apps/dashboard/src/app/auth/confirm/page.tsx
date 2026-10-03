@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 
 import { confirmEmailLinkAction } from '@/app/actions/auth';
+import { AuthShell } from '@/components/auth/auth-shell';
 import { Button } from '@/components/ui/button';
 
 export const metadata: Metadata = { title: 'Confirmer' };
@@ -19,20 +20,19 @@ export default async function ConfirmEmailLinkPage({ searchParams }: PageProps<'
     type === 'invite' ? 'Rejoindre l’espace de gestion' : 'Choisir un nouveau mot de passe';
 
   return (
-    <main id="contenu" className="mx-auto w-full max-w-md flex-1 p-6 sm:p-10">
-      <h1 className="text-2xl font-semibold">{title}</h1>
-      <p className="text-muted-foreground mt-2">
-        Cliquez sur « Continuer » pour valider le lien reçu par email.
-      </p>
+    <AuthShell
+      title={title}
+      description="Cliquez sur « Continuer » pour valider le lien reçu par email."
+    >
       <form action={confirmEmailLinkAction} className="mt-6">
         <input type="hidden" name="token_hash" value={first(params.token_hash)} />
         <input type="hidden" name="type" value={type} />
         <input type="hidden" name="code" value={first(params.code)} />
         <input type="hidden" name="next" value={first(params.next)} />
-        <Button type="submit" className="w-full">
+        <Button type="submit" className="h-10 w-full">
           Continuer
         </Button>
       </form>
-    </main>
+    </AuthShell>
   );
 }

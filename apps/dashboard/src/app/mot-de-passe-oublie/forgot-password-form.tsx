@@ -27,7 +27,7 @@ export function ForgotPasswordForm() {
           {state.message}
         </p>
       ) : null}
-      <Button type="submit" disabled={pending}>
+      <Button type="submit" className="h-10 w-full" disabled={pending}>
         Envoyer le lien
       </Button>
       <p className="text-sm">

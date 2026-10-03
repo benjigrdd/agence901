@@ -16,13 +16,17 @@ export default async function AccountSecurityPage() {
     return (
       <main id="contenu" className="mx-auto w-full max-w-2xl flex-1 p-6 sm:p-10">
         <h1 className="text-2xl font-semibold">Sécurité du compte</h1>
-        <p className="text-muted-foreground mt-2">Mode démonstration : la gestion de la double authentification nécessite Supabase.</p>
+        <p className="text-muted-foreground mt-2">
+          Mode démonstration : la gestion de la double authentification nécessite Supabase.
+        </p>
       </main>
     );
   }
   const supabase = await createSupabaseServerClient();
   const { data } = await supabase.auth.mfa.listFactors();
-  const factors = (data?.totp ?? []).filter((f) => f.status === 'verified').map((f) => ({ id: f.id, name: f.friendly_name ?? 'Appareil', createdAt: f.created_at }));
+  const factors = (data?.totp ?? [])
+    .filter((f) => f.status === 'verified')
+    .map((f) => ({ id: f.id, name: f.friendly_name ?? 'Appareil', createdAt: f.created_at }));
   return (
     <main id="contenu" className="mx-auto w-full max-w-2xl flex-1 space-y-10 p-6 sm:p-10">
       <h1 className="text-2xl font-semibold">Sécurité du compte</h1>
@@ -31,7 +35,13 @@ export default async function AccountSecurityPage() {
         <h2 id="mdp" className="text-lg font-semibold">
           Changer de mot de passe
         </h2>
-        <PasswordForm action={changePasswordAction} submitLabel="Changer le mot de passe" mode="change" />
+        <div className="max-w-sm">
+          <PasswordForm
+            action={changePasswordAction}
+            submitLabel="Changer le mot de passe"
+            mode="change"
+          />
+        </div>
       </section>
     </main>
   );

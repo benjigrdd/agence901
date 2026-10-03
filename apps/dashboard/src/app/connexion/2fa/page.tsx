@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 
+import { AuthShell } from '@/components/auth/auth-shell';
 import { isSupabaseMode } from '@/lib/supabase/env';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 
@@ -16,10 +17,11 @@ export default async function MfaPage({ searchParams }: PageProps<'/connexion/2f
     if (data?.nextLevel !== 'aal2') redirect('/connexion/2fa/configurer');
   }
   return (
-    <main id="contenu" className="mx-auto w-full max-w-md flex-1 p-6 sm:p-10">
-      <h1 className="text-2xl font-semibold">Double authentification</h1>
-      <p className="text-muted-foreground mt-2">Saisissez le code à 6 chiffres affiché par votre application d’authentification.</p>
+    <AuthShell
+      title="Double authentification"
+      description="Saisissez le code à 6 chiffres affiché par votre application d’authentification."
+    >
       <MfaVerifyForm next={typeof next === 'string' && next.startsWith('/') ? next : '/'} />
-    </main>
+    </AuthShell>
   );
 }
