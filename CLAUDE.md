@@ -18,6 +18,7 @@ packages/data       @app/data : ports d'accès aux données + adaptateurs (mock,
 packages/config     @app/config : tsconfig de base, ESLint (flat config), Prettier
 scripts/            scripts TS exécutés avec tsx
 docs/               decisions.md (ADR), avancement.md (état des lots), data-contracts.md
+website/            site vitrine agence901.fr (HTML statique, hébergé chez o2switch, voir LISEZMOI.txt)
 ```
 
 Les paquets internes sont « just-in-time » : `exports` pointe vers `src/index.ts`, sans build.

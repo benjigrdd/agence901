@@ -1,0 +1,78 @@
+# ---------------------------------------------------------------
+# Configuration Apache (o2switch) - agence901.fr
+# ---------------------------------------------------------------
+
+Options -Indexes
+DirectoryIndex index.html
+AddDefaultCharset UTF-8
+AddCharset UTF-8 .html .css .js .xml .txt .webmanifest
+
+# Types de fichiers (icônes, manifeste)
+AddType image/svg+xml .svg
+AddType image/x-icon .ico
+AddType application/manifest+json .webmanifest
+
+# Pages d'erreur (si le site est dans un sous-dossier, adapter le chemin)
+ErrorDocument 404 /404.html
+ErrorDocument 403 /404.html
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # Fichiers et dossiers cachés (.claude, .DS_Store, .git...) : introuvables.
+  # Exception : .well-known, utilisé par Let's Encrypt pour le certificat HTTPS.
+  RewriteRule (^|/)\.(?!well-known/) - [R=404,L]
+
+  # www.agence901.fr -> https://agence901.fr (une seule adresse pour le site)
+  RewriteCond %{HTTP_HOST} ^www\.agence901\.fr$ [NC]
+  RewriteRule ^ https://agence901.fr%{REQUEST_URI} [L,R=301]
+
+  # Forcer HTTPS (activer d'abord le certificat SSL dans cPanel > Let's Encrypt / AutoSSL)
+  RewriteCond %{HTTPS} off
+  RewriteCond %{HTTP:X-Forwarded-Proto} !https
+  RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+  # /index.html -> / (évite deux adresses pour la même page)
+  RewriteCond %{THE_REQUEST} \s/+index\.html[\s?]
+  RewriteRule ^index\.html$ / [L,R=301]
+</IfModule>
+
+# Fichiers de travail qui ne doivent pas être accessibles depuis le web
+<FilesMatch "(^LISEZMOI\.txt|\.(md|py|sh|bak|log|zip|psd|fig|sketch))$">
+  Require all denied
+</FilesMatch>
+RedirectMatch 404 ^/apercus(/|$)
+
+<IfModule mod_headers.c>
+  Header always set Strict-Transport-Security "max-age=31536000"
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+  Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://api.web3forms.com; form-action 'self' https://api.web3forms.com; frame-ancestors 'self'; base-uri 'self'; object-src 'none'; upgrade-insecure-requests"
+  Header always unset X-Powered-By
+  Header unset X-Powered-By
+
+  # Pages HTML : toujours revalidées, pour que les modifications apparaissent tout de suite
+  <FilesMatch "\.html$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+</IfModule>
+
+# Compression
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/plain text/css text/xml application/xml application/javascript application/json application/manifest+json image/svg+xml image/x-icon
+</IfModule>
+
+# Cache navigateur
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresDefault "access plus 1 hour"
+  ExpiresByType text/html "access plus 0 seconds"
+  ExpiresByType application/xml "access plus 1 hour"
+  ExpiresByType text/plain "access plus 1 hour"
+  ExpiresByType application/manifest+json "access plus 1 week"
+  ExpiresByType image/svg+xml "access plus 1 month"
+  ExpiresByType image/png "access plus 1 month"
+  ExpiresByType image/x-icon "access plus 1 month"
+</IfModule>

@@ -1,0 +1,45 @@
+LANDING PAGE - APPLICATION COMMUNALE ET TABLEAU DE BORD MAIRIE
+================================================================
+
+CONTENU DU DOSSIER
+- index.html             : la landing page (responsive : téléphone, tablette, ordinateur)
+- contact.html           : la page contact avec le formulaire
+- mentions-legales.html  : mentions légales (obligatoires, loi LCEN)
+- confidentialite.html   : politique de confidentialité (obligatoire, RGPD)
+- 404.html               : page affichée quand une adresse n'existe pas
+- .htaccess              : HTTPS forcé, www -> sans www, fichiers cachés bloqués, sécurité, cache, page 404 (fichier caché sur Mac : Cmd+Maj+. pour le voir)
+- robots.txt, sitemap.xml: pour Google
+- favicon.ico, favicon.svg, favicon-96.png : icônes de l'onglet (et dans les résultats Google)
+- apple-touch-icon.png   : icône de l'écran d'accueil iPhone
+- site.webmanifest, icon-192.png, icon-512.png : icônes Android / écran d'accueil
+- og-image.png           : image affichée quand on partage le lien (LinkedIn, e-mail, messageries)
+- logo/                  : le logo en SVG (vectoriel) et PNG, en noir, blanc, jaune et marron,
+                           avec ou sans fond. À METTRE EN LIGNE : le site utilise logo-blanc.svg et logo-noir.svg.
+- apercus/               : captures de la version mobile (pour info, à ne pas mettre en ligne)
+
+METTRE EN LIGNE SUR O2SWITCH
+1. cPanel > Let's Encrypt SSL (ou AutoSSL) : vérifier que le certificat HTTPS est actif sur le domaine.
+2. cPanel > Gestionnaire de fichiers (ou FTP) : aller dans public_html (ou le dossier du sous-domaine).
+3. Y déposer tous les fichiers SAUF le dossier apercus/, le dossier .claude/ et ce LISEZMOI.txt.
+   Ne pas oublier .htaccess (fichier caché).
+   Si le site est dans un sous-dossier et non à la racine du domaine, modifier la ligne
+   "ErrorDocument 404 /404.html" dans .htaccess.
+
+À FAIRE AVANT LA MISE EN LIGNE
+1. Adresse benjamin@agence901.fr (affichée dans les mentions légales et la confidentialité) :
+   cPanel > Redirecteurs > Ajouter un redirecteur : benjamin@agence901.fr -> benjamin.giraud8@gmail.com
+   (ou cPanel > Comptes de messagerie pour une vraie boîte).
+   (Clé Web3Forms déjà intégrée dans contact.html.)
+
+À RELIRE (textes rédigés, à ajuster)
+- index.html, section "Mise en place" : les 4 étapes (le délai de 4 à 6 semaines est indicatif).
+- index.html, FAQ : les réponses sont dans le bloc <div id="faq-data">, lignes <p data-a>...</p>.
+  Vérifier en priorité "Où sont les données ?" (hébergement en France) et "Combien ça coûte ?".
+- Remplacer les maquettes du tableau de bord par de vraies captures dès qu'elles existent.
+
+APRÈS LA MISE EN LIGNE
+1. Envoyer une demande de test depuis le formulaire et vérifier sa réception dans Gmail (et qu'elle n'est pas en spam).
+2. Tester le partage du lien : https://www.linkedin.com/post-inspector/
+3. Déclarer le site dans Google Search Console et y soumettre sitemap.xml.
+
+Aucune bibliothèque, aucune police à charger, aucun cookie. Seul service externe : Web3Forms pour le formulaire.
