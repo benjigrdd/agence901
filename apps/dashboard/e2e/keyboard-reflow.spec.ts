@@ -45,7 +45,10 @@ test.describe('clavier seul', () => {
 
     await tabTo(page, () => focusedIs(page, (el) => el.id !== '' && document.querySelector(`label[for="${el.id}"]`)?.textContent?.includes('Nouveau statut') === true));
     await expectVisibleFocus(page);
-    await page.keyboard.press('ArrowDown');
+    // Saisie de la premiere lettre : meme comportement sous Linux et macOS (la fleche bas, elle,
+    // ouvre la liste sous macOS mais choisit l'option suivante « Rejete » sous Linux).
+    await page.keyboard.type('P');
+    await expect(page.locator('#nouveau-statut')).toHaveValue('acknowledged');
     await tabTo(page, () => focusedIs(page, (el) => el.tagName === 'BUTTON' && el.textContent?.includes('Changer le statut') === true));
     await page.keyboard.press('Enter');
     await expect(page.getByText(/Statut changé/)).toBeVisible();

@@ -13,3 +13,10 @@ allowBuilds:
 # Recommande pour React Native / Metro en monorepo pnpm (equivalent de
 # node-linker=hoisted dans .npmrc, deplace ici depuis pnpm 10).
 nodeLinker: hoisted
+
+# Failles sans version corrigee, absentes du code execute en production (ADR-020) : a retirer des
+# qu'un correctif est publie. node-forge : CLI Expo (outillage mobile) ; braces : CLI shadcn et ESLint.
+auditConfig:
+  ignoreGhsas:
+    - GHSA-86w9-cpqp-85rv
+    - GHSA-vfj7-8cjw-p6xm

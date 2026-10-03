@@ -173,3 +173,11 @@ couleurs de la marque, accès aux données par `@app/data` comme le dashboard. P
 de carte : l'adresse est géocodée par l'API Adresse, avec repli au centre de la commune signalé comme
 approximatif. Ces choix sont provisoires ; les lots 08–10 les remplaceront (onglets, carte MapLibre,
 photos, push, hors ligne).
+
+## ADR-020 — Exceptions d'audit des dépendances
+
+`pnpm audit --prod --audit-level high` reste bloquant en CI. Deux failles « high » sans version corrigée
+sont ignorées (`auditConfig.ignoreGhsas` dans `pnpm-workspace.yaml`) car absentes du code exécuté en
+production : `node-forge` (GHSA-86w9-cpqp-85rv), utilisé par la CLI Expo, et `braces`
+(GHSA-vfj7-8cjw-p6xm), utilisé par les CLI shadcn et ESLint (le dashboard n'importe de shadcn qu'une
+feuille CSS). Chaque exception est retirée dès qu'un correctif est publié.
