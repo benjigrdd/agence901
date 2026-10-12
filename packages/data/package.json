@@ -19,7 +19,7 @@
   "dependencies": {
     "@app/shared": "workspace:*",
     "@faker-js/faker": "10.6.0",
-    "@supabase/supabase-js": "^2.117.2",
+    "@supabase/supabase-js": "^2.117.3",
     "zod": "4.6.5"
   },
   "devDependencies": {
