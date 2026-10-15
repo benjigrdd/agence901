@@ -22,7 +22,7 @@ jobs:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.SCW_SECRET_KEY }}
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
